@@ -1,12 +1,12 @@
 Team members: (names and student IDs)
-* ...
-* ...
-* ...
+* Tsjerk Piter Walinga   0962414
+* Siebe Tolsma           9829261
+* Stijn van Huet         1474103
 
 Tick the boxes below for the implemented features. Add a brief note only if necessary, e.g., if it's only partially working, or how to turn it on.
 
 Formalities:
-[ ] This readme.txt
+[X] This readme.txt
 [ ] Cleaned (no obj/bin folders)
 
 Minimum requirements implemented:
