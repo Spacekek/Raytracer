@@ -172,7 +172,7 @@ namespace Template
         {
             if (font == null || fontRedir == null)
             {
-                font = new Surface("../../../assets/font.png");
+                font = new Surface("assets/font.png");
                 string ch = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_-+={}[];:<>,.?/\\ ";
                 fontRedir = new int[256];
                 for (int i = 0; i < 256; i++) fontRedir[i] = 0;
