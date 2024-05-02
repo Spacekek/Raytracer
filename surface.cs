@@ -1,6 +1,7 @@
 ﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using OpenTK.Graphics.OpenGL;
+using System.Runtime.CompilerServices;
 
 namespace Template
 {
@@ -166,6 +167,28 @@ namespace Template
             {
                 pixels[x + y * width] = c;
             }
+        }
+        public void Circle(int x, int y, int r, int c)
+        {
+            // draw circle by drawing lines between points on the circle
+            for (int i = 0; i < 360; i += 10)
+            {
+                float a0 = (float)(i * Math.PI / 180);
+                float a1 = (float)((i + 10) * Math.PI / 180);
+                int x1 = (int)(x + r * Math.Cos(a0));
+                int y1 = (int)(y + r * Math.Sin(a0));
+                int x2 = (int)(x + r * Math.Cos(a1));
+                int y2 = (int)(y + r * Math.Sin(a1));
+                Line(x1, y1, x2, y2, c);
+            }
+        }
+        public int XScreen(float x, float scale, float offset)
+        {
+            return (int)(((x+offset) / scale) * width);
+        }
+        public int YScreen(float y, float scale, float offset)
+        {
+            return (int)(((-1 * y+offset) / scale) * height);
         }
         // print a string
         public void Print(string t, int x, int y, int c)
