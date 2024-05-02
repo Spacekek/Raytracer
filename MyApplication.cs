@@ -17,21 +17,10 @@ namespace Template
         {
             // create camera
             camera = new Camera();
-            camera.x = 0;
-            camera.y = 0;
-            camera.z = -5;
-            camera.dx = 0;
-            camera.dy = 0;
-            camera.dz = 1;
-            camera.ux = 0;
-            camera.uy = 1;
-            camera.uz = 0;
-            camera.fov = 90;
             // create scene
             scene = new Scene();
-            scene.Add(new Sphere(0, 0, 0, 1));
-            scene.Add(new Plane(0, 1, 0, 1));
-            scene.Add(new Light(2, 2, 0, 1, 1, 1));
+            scene.Add(new Sphere(1, 0, 0, 0.1f));
+            scene.Add(new Light(1, 1, -1, 1, 1, 1));
             // create raytracer
             raytracer = new Raytracer(scene, camera, screen);
         }
@@ -40,7 +29,7 @@ namespace Template
         {
             screen.Clear(0);
             raytracer.Render();
-            // raytracer.Debug();
+            raytracer.Debug();
         }
     }
     class Camera
@@ -81,10 +70,35 @@ namespace Template
     {
         public float x, y, z;
         public float r, g, b;
+        // constructor
+        public Primitive()
+        {
+            r = g = b = 1;
+        }
         // intersect
         public abstract Intersection Intersect(float ox, float oy, float oz, float dx, float dy, float dz, ref float t);
-        // normal
-        public abstract (float, float, float) Normal(float x, float y, float z, ref float nx, ref float ny, ref float nz);
+        // draw debug
+        public virtual void DrawDebug(Surface screen)
+        {
+            // draw a box on the xz plane
+            int width = screen.width;
+            int height = screen.height;
+            // for now we assume axes are between -2 and 2
+            // screen.box takes pixel coordinates instead of world coordinates
+            int x0 = (int)(x * width / 4 + width / 2 - 5);
+            int y0 = (int)(z * height / 4 + height / 2 - 5);
+            int x1 = (int)(z * width / 4 + width / 2 + 5);
+            int y1 = (int)(z * height / 4 + height / 2 + 5);
+            
+            screen.Box(x0, y0, x1, y1, MixColor(r, g, b));
+        }
+        public int MixColor(float r, float g, float b)
+        {
+            int red = (int)(r * 255);
+            int green = (int)(g * 255);
+            int blue = (int)(b * 255);
+            return (red << 16) + (green << 8) + blue;
+        }
     }
     // a sphere is defined by a center and a radius
     class Sphere : Primitive
@@ -99,38 +113,28 @@ namespace Template
         }
         public override Intersection Intersect(float ox, float oy, float oz, float dx, float dy, float dz, ref float t)
         {
-            float a = dx * dx + dy * dy + dz * dz;
-            float b = 2 * (dx * (ox - x) + dy * (oy - y) + dz * (oz - z));
-            float c = (ox - x) * (ox - x) + (oy - y) * (oy - y) + (oz - z) * (oz - z) - radius * radius;
-            float det = b * b - 4 * a * c;
-            if (det > 0)
-            {
-                det = (float)Math.Sqrt(det);
-                float t0 = (-b - det) / (2 * a);
-                float t1 = (-b + det) / (2 * a);
-                if (t0 > 0)
-                {
-                    t = t0;
-                    return new Intersection(this, t0, 0, 0, 0);
-                }
-                if (t1 > 0)
-                {
-                    t = t1;
-                    return new Intersection(this, t1, 0, 0, 0);
-                }
-            }
+            // #TODO
             return null;
         }
-        public override (float, float, float) Normal(float x, float y, float z, ref float nx, ref float ny, ref float nz)
+        public override void DrawDebug(Surface screen)
         {
-            nx = x - this.x;
-            ny = y - this.y;
-            nz = z - this.z;
-            float len = (float)Math.Sqrt(nx * nx + ny * ny + nz * nz);
-            nx /= len;
-            ny /= len;
-            nz /= len;
-            return (nx, ny, nz);
+            // draw a circle on the xz plane
+            int width = screen.width;
+            int height = screen.height;
+            int x0 = (int)(x * width / 4 + width / 2);
+            int y0 = (int)(z * height / 4 + height / 2);
+            int r = (int)(radius * width / 4);
+            // draw circle by drawing lines between points on the circle
+            for (int i = 0; i < 360; i += 10)
+            {
+                float a0 = (float)(i * Math.PI / 180);
+                float a1 = (float)((i + 10) * Math.PI / 180);
+                int x1 = (int)(x0 + r * Math.Cos(a0));
+                int y1 = (int)(y0 + r * Math.Sin(a0));
+                int x2 = (int)(x0 + r * Math.Cos(a1));
+                int y2 = (int)(y0 + r * Math.Sin(a1));
+                screen.Line(x1, y1, x2, y2, MixColor(r, g, b));
+            }
         }
     }
     
@@ -147,17 +151,8 @@ namespace Template
         }
         public override Intersection Intersect(float ox, float oy, float oz, float dx, float dy, float dz, ref float t)
         {
-            float denom = nx * dx + ny * dy + nz * dz;
-            if (denom > 0) return null;
-            t = (nx * (x - ox) + ny * (y - oy) + nz * (z - oz)) / denom;
-            return new Intersection(this, t, nx, ny, nz);
-        }
-        public override (float, float, float) Normal(float x, float y, float z, ref float nx, ref float ny, ref float nz)
-        {
-            nx = this.nx;
-            ny = this.ny;
-            nz = this.nz;
-            return (nx, ny, nz);
+            // TODO: implement plane intersection
+            return null;
         }
     }
     // Light stores location and intensity of a light source
@@ -246,68 +241,55 @@ namespace Template
             {
                 for (int x = 0; x < w; x++)
                 {
-                    float u = (2 * x - w) / (float)w;
-                    float v = (2 * y - h) / (float)h;
-                    float ox = camera.x;
-                    float oy = camera.y;
-                    float oz = camera.z;
-                    float dx = camera.dx + u * camera.corners[0] + v * camera.corners[3];
-                    float dy = camera.dy + u * camera.corners[1] + v * camera.corners[4];
-                    float dz = camera.dz + u * camera.corners[2] + v * camera.corners[5];
-                    float t = 0;
-                    Primitive prim = null;
-                    Intersection isect = scene.Intersect(ox, oy, oz, dx, dy, dz, ref prim, ref t);
-                    if (isect != null)
-                    {
-                        float nx = 0, ny = 0, nz = 0;
-                        prim.Normal(ox + t * dx, oy + t * dy, oz + t * dz, ref nx, ref ny, ref nz);
-                        float r = 0, g = 0, b = 0;
-                        foreach (Light light in scene.lights)
-                        {
-                            float ldx = light.x - ox;
-                            float ldy = light.y - oy;
-                            float ldz = light.z - oz;
-                            float ldist = (float)Math.Sqrt(ldx * ldx + ldy * ldy + ldz * ldz);
-                            ldx /= ldist;
-                            ldy /= ldist;
-                            ldz /= ldist;
-                            float dt = ldx * nx + ldy * ny + ldz * nz;
-                            if (dt > 0)
-                            {
-                                float shade = dt;
-                                r += light.r * shade;
-                                g += light.g * shade;
-                                b += light.b * shade;
-                            }
-                        }
-                        pixels[x + y * w] = ((int)(r * 255) << 16) | ((int)(g * 255) << 8) | (int)(b * 255);
-                    }
+                    // calculate ray direction, normalize and check for intersections
+                    // # TODO
+                    // set pixel color to background color
+                    screen.Plot(x, y, 0x000000);
                 }
             }
         }
-        // debug view For the middle row of pixels (typically line 256 for a 512x512 window), it generates debug output by visualizing every Nth ray (where N is e.g. 10).
+        // debug view For the middle row of pixels, it generates debug output by visualizing every Nth ray (where N is e.g. 10).
         public void Debug()
         {
             int w = screen.width;
             int h = screen.height;
-            int[] pixels = screen.pixels;
+
+            // draw bar at camera location
+            int xc = (int)camera.x * w / 4 + w / 2;
+            int zc = (int)camera.z * h / 4 + h / 2;
+            screen.Bar(xc -2, zc - 2, xc + 2, zc + 2, 0x00ff00);
+            // draw triangle representing the field of view keeping direction of camera in mind
+            // xz angle of camera
+            float cameradir = (float)Math.Atan2(camera.dx, camera.dz);
+            float angle = (float)(cameradir + camera.fov * Math.PI / 180 / 2);
+            int x0 = (int)(xc + (50 * Math.Cos(angle)));
+            int z0 = (int)(zc + (50 * Math.Sin(angle)));
+            int x1 = (int)(xc + (50 * Math.Cos(-angle)));
+            int z1 = (int)(zc + (50 * Math.Sin(-angle)));
+            screen.Line(xc, zc, x0, z0, 0x00ff00);
+            screen.Line(xc, zc, x1, z1, 0x00ff00);
+            screen.Line(x0, z0, x1, z1, 0x00ff00);
+
+
+            // draw rays
             for (int x = 0; x < w; x++)
             {
-                float u = (2 * x - w) / (float)w;
-                float v = 0;
-                float ox = camera.x;
-                float oy = camera.y;
-                float oz = camera.z;
-                float dx = camera.dx + u * camera.corners[0] + v * camera.corners[3];
-                float dy = camera.dy + u * camera.corners[1] + v * camera.corners[4];
-                float dz = camera.dz + u * camera.corners[2] + v * camera.corners[5];
-                float t = 0;
-                Primitive prim = null;
-                Intersection isect = scene.Intersect(ox, oy, oz, dx, dy, dz, ref prim, ref t);
-                if (isect != null)
+                if (x % 10 == 0)
                 {
-                    pixels[x + 256 * w] = 0xffffff;
+                    // calculate ray direction and draw line
                 }
+            }
+            // draw lights
+            foreach (Light l in scene.lights)
+            {
+                int xl = (int)l.x * w / 4 + w / 2;
+                int zl = (int)l.z * h / 4 + h / 2;
+                screen.Bar(xl - 2, zl - 2, xl + 2, zl + 2, 0xffff00);
+            }
+            // draw primitives
+            foreach (Primitive p in scene.primitives)
+            {
+                p.DrawDebug(screen);
             }
         }
     }
