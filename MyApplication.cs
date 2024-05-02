@@ -16,10 +16,12 @@ namespace Template
         public void Init()
         {
             // create camera
-            camera = new Camera();
+            camera = new Camera((float)screen.width / screen.height);
             // create scene
             scene = new Scene();
-            scene.Add(new Sphere(1, 0, 0, 0.1f));
+            Sphere sphere = new Sphere(1, 0, 0, 0.1f);
+            sphere.SetColor(1, 0, 1);
+            scene.Add(sphere);
             scene.Add(new Light(1, 1, -1, 1, 1, 1));
             // create raytracer
             raytracer = new Raytracer(scene, camera, screen);
@@ -44,8 +46,7 @@ namespace Template
         public float fov;
         // screen plane specified by four corner points
         public float[] corners;
-
-        public Camera()
+        public Camera(float aspect)
         {
             x = y = z = 0;
             dx = 0; dy = 0; dz = 1;
@@ -59,10 +60,11 @@ namespace Template
                 corners[i] = 0;
             }
 
-            // set corners
-            corners[0] = -1; corners[1] = -1; corners[2] = 1;
-            corners[3] = 1; corners[4] = -1; corners[5] = 1;
-            corners[6] = 1; corners[7] = 1;
+            // set corners based on fov, direction, up and screen aspect ratio
+            float angle = (float)(fov * Math.PI / 180 / 2);
+            float x0 = (float)(Math.Tan(angle) * aspect);
+            float y0 = (float)(Math.Tan(angle));
+
         }
     }
 
@@ -99,6 +101,12 @@ namespace Template
             int blue = (int)(b * 255);
             return (red << 16) + (green << 8) + blue;
         }
+        public void SetColor(float r, float g, float b)
+        {
+            this.r = r;
+            this.g = g;
+            this.b = b;
+        }
     }
     // a sphere is defined by a center and a radius
     class Sphere : Primitive
@@ -113,7 +121,7 @@ namespace Template
         }
         public override Intersection Intersect(float ox, float oy, float oz, float dx, float dy, float dz, ref float t)
         {
-            // #TODO
+            // #TODO implement sphere intersection
             return null;
         }
         public override void DrawDebug(Surface screen)
