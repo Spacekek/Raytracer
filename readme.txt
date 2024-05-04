@@ -7,7 +7,7 @@ Tick the boxes below for the implemented features. Add a brief note only if nece
 
 Formalities:
 [X] This readme.txt
-[ ] Cleaned (no obj/bin folders)
+[X] Cleaned (no obj/bin folders)
 
 Minimum requirements implemented:
 [ ] Camera: position and orientation controls, field of view in degrees
@@ -18,7 +18,7 @@ Controls: ...
 [ ] Phong shading: (R.V) or (N.H), exponent
 [ ] Diffuse color texture: only required on the plane primitive, image or procedural, (u,v) texture coordinates
 [ ] Mirror reflection: recursive
-[ ] Debug visualization: sphere primitives, rays (primary, shadow, reflected, refracted)
+[ ] Debug visualization: sphere primitives ✓, rays (primary ✓, shadow, reflected, refracted)
 
 Bonus features implemented:
 [ ] Triangle primitives: single triangles or meshes
