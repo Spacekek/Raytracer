@@ -1,7 +1,6 @@
 ﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using OpenTK.Graphics.OpenGL;
-using System.Runtime.CompilerServices;
 
 namespace Template
 {
@@ -138,11 +137,11 @@ namespace Template
                 if (x2 < x1) { (x2, x1) = (x1, x2); (y2, y1) = (y1, y2); }
                 int l = x2 - x1;
                 if (l == 0) return;
-                int dy = ((y2 - y1) * 8192) / l;
+                int dy = (y2 - y1) * 8192 / l;
                 y1 *= 8192;
                 for (int i = 0; i < l; i++)
                 {
-                    pixels[x1++ + (y1 / 8192) * width] = c;
+                    pixels[x1++ + y1 / 8192 * width] = c;
                     y1 += dy;
                 }
             }
@@ -151,7 +150,7 @@ namespace Template
                 if (y2 < y1) { (x2, x1) = (x1, x2); (y2, y1) = (y1, y2); }
                 int l = y2 - y1;
                 if (l == 0) return;
-                int dx = ((x2 - x1) * 8192) / l;
+                int dx = (x2 - x1) * 8192 / l;
                 x1 *= 8192;
                 for (int i = 0; i < l; i++)
                 {
@@ -184,11 +183,11 @@ namespace Template
         }
         public int XScreen(float x, float scale, float offset)
         {
-            return (int)(((x+offset) / scale) * width);
+            return (int)((x+offset) / scale * width);
         }
         public int YScreen(float y, float scale, float offset)
         {
-            return (int)(((-1 * y+offset) / scale) * height);
+            return (int)((-1 * y+offset) / scale * height);
         }
         // print a string
         public void Print(string t, int x, int y, int c)
