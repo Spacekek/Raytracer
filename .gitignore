@@ -1,0 +1,3 @@
+# git ignore for folders bin and obj
+bin/
+obj/
