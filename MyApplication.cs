@@ -22,9 +22,14 @@ namespace Template
         public void Init()
         {
             // add scene objects and lights
-            Sphere sphere = new Sphere(0.4f, 0.0f, 0.2f, 0.1f);
+            Sphere sphere = new Sphere(0.0f, 0.0f, 2f, 0.1f);
             sphere.SetColor(0.0f, 0.0f, 1.0f);
             scene.Add(sphere);
+
+            Plane plane = new Plane(0.0f, 0.5f, 1f, 3f);
+            plane.SetColor(0.0f, 1.0f, 0.0f);
+            scene.Add(plane);
+
             scene.Add(new Light(1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f));
         }
 
@@ -33,7 +38,7 @@ namespace Template
             // every frame, clear the screen, render the scene and draw debug view
             screen.Clear(0);
             raytracer.Render();
-            raytracer.Debug();
+            // raytracer.Debug();
         }
     }
 

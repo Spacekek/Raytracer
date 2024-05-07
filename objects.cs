@@ -83,11 +83,22 @@ namespace Objects
         {
             normal = new Vector3(nx, ny, nz);
             this.d = d;
+            position = new Vector3(d / normal.X, d / normal.Y, d / normal.Z);
         }
 
         public override Intersection Intersect(Vector3 origin, Vector3 direction)
         {
-            // TODO: implement intersection
+            // ray-plane intersection
+            float denominator = Vector3.Dot(normal, direction);
+            if (denominator > 0.0001f)
+            {
+                float t = (d - Vector3.Dot(normal, origin)) / denominator;
+                if (t >= 0)
+                {
+                    Vector3 hitPoint = new Vector3(origin + direction * t);
+                    return new Intersection(this, t, hitPoint);
+                }
+            }
             return null;
         }
     }
