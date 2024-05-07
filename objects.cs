@@ -1,5 +1,4 @@
 using OpenTK.Mathematics;
-using OpenTK;
 using Template;
 
 namespace Objects
@@ -14,7 +13,7 @@ namespace Objects
             color = new Color4(1.0f, 1.0f, 1.0f, 1);
         }
 
-        public abstract Intersection Intersect(float ox, float oy, float oz, float dx, float dy, float dz);
+        public abstract Intersection Intersect(Vector3 origin, Vector3 direction);
 
         public virtual void DrawDebug(Surface screen, float scale, float x_offset, float y_offset)
         {
@@ -47,12 +46,12 @@ namespace Objects
             this.radius = radius;
         }
 
-        public override Intersection Intersect(float ox, float oy, float oz, float dx, float dy, float dz)
+        public override Intersection Intersect(Vector3 origin, Vector3 direction)
         {
             // ray-sphere intersection
-            float a = Vector3.Dot(new Vector3(dx, dy, dz), new Vector3(dx, dy, dz));
-            float b = 2 * (dx * (ox - position.X) + dy * (oy - position.Y) + dz * (oz - position.Z));
-            float c = position.X * position.X + position.Y * position.Y + position.Z * position.Z + ox * ox + oy * oy + oz * oz - 2 * (position.X * ox + position.Y * oy + position.Z * oz) - radius * radius;
+            float a = Vector3.Dot(direction, direction);
+            float b = 2 * Vector3.Dot(direction, origin - position);
+            float c = Vector3.Dot(origin - position, origin - position) - radius * radius;
 
             // The discriminant < 0 means no intersection, = 0 means one intersection (ray touches the sphere), > 0 means two intersections (ray goes through sphere)
             float discriminant = b * b - 4 * a * c;
@@ -61,7 +60,7 @@ namespace Objects
             // Calculate the distance to the intersection point
             float distance = (-b - (float)System.Math.Sqrt(discriminant)) / (2 * a);
             // Calculate the intersection point
-            Vector3 hitPoint = new Vector3(ox + distance * dx, oy + distance * dy, oz + distance * dz);
+            Vector3 hitPoint = new Vector3(origin + direction * distance);
 
             return new Intersection(this, distance, hitPoint);
         }
@@ -86,7 +85,7 @@ namespace Objects
             this.d = d;
         }
 
-        public override Intersection Intersect(float ox, float oy, float oz, float dx, float dy, float dz)
+        public override Intersection Intersect(Vector3 origin, Vector3 direction)
         {
             // TODO: implement intersection
             return null;

@@ -97,22 +97,19 @@ namespace Template
             lights.Add(l);
         }
 
-        public Intersection Intersect(float ox, float oy, float oz, float dx, float dy, float dz)
+        public Intersection Intersect(Vector3 origin, Vector3 direction)
         {
             Intersection isect = null;
             // find closest intersection by checking all primitives in the scene and keeping track of the closest one
             float distance = float.MaxValue;
-            Primitive prim = null;
             foreach (Primitive p in primitives)
             {
-                Intersection isect2 = p.Intersect(ox, oy, oz, dx, dy, dz);
+                Intersection isect2 = p.Intersect(origin, direction);
                 // if we hit an object and it is closer than the previous closest object, update the closest object
                 if (isect2 != null && isect2.distance < distance)
                 {
-
                     distance = isect2.distance;
                     isect = isect2;
-                    prim = p;
                 }
             }
             return isect;
@@ -153,7 +150,7 @@ namespace Template
                     float dy = camera.corners[0].Y + (camera.corners[3].Y - camera.corners[0].Y) * y / h;
                     float distance = 0;
                     Primitive prim = null;
-                    Intersection isect = scene.Intersect(camera.position.X, camera.position.Y, camera.position.Z, dx, dy, dz);
+                    Intersection isect = scene.Intersect(new Vector3(camera.position.X, camera.position.Y, camera.position.Z), new Vector3(dx, dy, dz));
                     if (isect != null)
                     {
                         // if we hit an object, set color to object color
