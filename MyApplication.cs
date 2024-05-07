@@ -148,13 +148,11 @@ namespace Template
                     float dx = camera.corners[0].X + (camera.corners[1].X - camera.corners[0].X) * x / w;
                     float dz = camera.corners[0].Z + (camera.corners[1].Z - camera.corners[0].Z) * x / w;
                     float dy = camera.corners[0].Y + (camera.corners[3].Y - camera.corners[0].Y) * y / h;
-                    float distance = 0;
-                    Primitive prim = null;
                     Intersection isect = scene.Intersect(new Vector3(camera.position.X, camera.position.Y, camera.position.Z), new Vector3(dx, dy, dz));
                     if (isect != null)
                     {
                         // if we hit an object, set color to object color
-                        prim = isect.prim;
+                        Primitive prim = isect.prim;
                         pixels[y * w + x] = prim.MixColor(prim.color.R, prim.color.G, prim.color.B);
                         continue;
                     }
