@@ -1,4 +1,5 @@
 using OpenTK.Mathematics;
+using OpenTK;
 using Template;
 
 namespace Objects
@@ -48,8 +49,21 @@ namespace Objects
 
         public override Intersection Intersect(float ox, float oy, float oz, float dx, float dy, float dz)
         {
-            // TODO implement intersection
-            return null;
+            // ray-sphere intersection
+            float a = Vector3.Dot(new Vector3(dx, dy, dz), new Vector3(dx, dy, dz));
+            float b = 2 * (dx * (ox - position.X) + dy * (oy - position.Y) + dz * (oz - position.Z));
+            float c = position.X * position.X + position.Y * position.Y + position.Z * position.Z + ox * ox + oy * oy + oz * oz - 2 * (position.X * ox + position.Y * oy + position.Z * oz) - radius * radius;
+
+            // The discriminant < 0 means no intersection, = 0 means one intersection (ray touches the sphere), > 0 means two intersections (ray goes through sphere)
+            float discriminant = b * b - 4 * a * c;
+
+            if (discriminant < 0) return null;
+            // Calculate the distance to the intersection point
+            float distance = (-b - (float)System.Math.Sqrt(discriminant)) / (2 * a);
+            // Calculate the intersection point
+            Vector3 hitPoint = new Vector3(ox + distance * dx, oy + distance * dy, oz + distance * dz);
+
+            return new Intersection(this, distance, hitPoint);
         }
 
         public override void DrawDebug(Surface screen, float scale, float x_offset, float y_offset)
