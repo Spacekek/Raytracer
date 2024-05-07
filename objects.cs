@@ -13,7 +13,7 @@ namespace Objects
             color = new Color4(1.0f, 1.0f, 1.0f, 1);
         }
 
-        public abstract Intersection Intersect(float ox, float oy, float oz, float dx, float dy, float dz, ref float t);
+        public abstract Intersection Intersect(float ox, float oy, float oz, float dx, float dy, float dz);
 
         public virtual void DrawDebug(Surface screen, float scale, float x_offset, float y_offset)
         {
@@ -46,9 +46,9 @@ namespace Objects
             this.radius = radius;
         }
 
-        public override Intersection Intersect(float ox, float oy, float oz, float dx, float dy, float dz, ref float t)
+        public override Intersection Intersect(float ox, float oy, float oz, float dx, float dy, float dz)
         {
-          // TODO: implement intersection
+            // TODO implement intersection
             return null;
         }
 
@@ -72,7 +72,7 @@ namespace Objects
             this.d = d;
         }
 
-        public override Intersection Intersect(float ox, float oy, float oz, float dx, float dy, float dz, ref float t)
+        public override Intersection Intersect(float ox, float oy, float oz, float dx, float dy, float dz)
         {
             // TODO: implement intersection
             return null;

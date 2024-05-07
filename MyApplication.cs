@@ -22,7 +22,7 @@ namespace Template
         public void Init()
         {
             // add scene objects and lights
-            Sphere sphere = new Sphere(0.0f, -0.2f, 1.0f, 0.1f);
+            Sphere sphere = new Sphere(0.4f, 0.0f, 0.2f, 0.1f);
             sphere.SetColor(0.0f, 0.0f, 1.0f);
             scene.Add(sphere);
             scene.Add(new Light(1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f));
@@ -97,19 +97,20 @@ namespace Template
             lights.Add(l);
         }
 
-        public Intersection Intersect(float ox, float oy, float oz, float dx, float dy, float dz, ref Primitive prim, ref float t)
+        public Intersection Intersect(float ox, float oy, float oz, float dx, float dy, float dz)
         {
             Intersection isect = null;
             // find closest intersection by checking all primitives in the scene and keeping track of the closest one
-            t = float.MaxValue;
+            float t = float.MaxValue;
+            Primitive prim = null;
             foreach (Primitive p in primitives)
             {
-                float t2 = 0;
-                Intersection isect2 = p.Intersect(ox, oy, oz, dx, dy, dz, ref t2);
+                Intersection isect2 = p.Intersect(ox, oy, oz, dx, dy, dz);
                 // if we hit an object and it is closer than the previous closest object, update the closest object
-                if (isect2 != null && t2 < t)
+                if (isect2 != null && isect2.t < t)
                 {
-                    t = t2;
+                    
+                    t = isect2.t;
                     isect = isect2;
                     prim = p;
                 }
@@ -152,10 +153,11 @@ namespace Template
                     float dy = camera.corners[0].Y + (camera.corners[3].Y - camera.corners[0].Y) * y / h;
                     float t = 0;
                     Primitive prim = null;
-                    Intersection isect = scene.Intersect(camera.position.X, camera.position.Y, camera.position.Z, dx, dy, dz, ref prim, ref t);
+                    Intersection isect = scene.Intersect(camera.position.X, camera.position.Y, camera.position.Z, dx, dy, dz);
                     if (isect != null)
                     {
                         // if we hit an object, set color to object color
+                        prim = isect.prim;
                         pixels[y * w + x] = prim.MixColor(prim.color.R, prim.color.G, prim.color.B);
                         continue;
                     }
