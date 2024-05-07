@@ -96,10 +96,10 @@ namespace Objects
         public float distance;
         public Vector3 hitPoint;
 
-        public Intersection(Primitive prim, float t, Vector3 hitPoint)
+        public Intersection(Primitive prim, float distance, Vector3 hitPoint)
         {
             this.prim = prim;
-            this.distance = t;
+            this.distance = distance;
             this.hitPoint = hitPoint;
         }
     }

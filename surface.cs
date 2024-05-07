@@ -183,14 +183,14 @@ namespace Template
         }
         public int XScreen(float x, float scale, float offset)
         {
-            return (int)((x+offset) / scale * width);
+            return (int)((x + offset) / scale * width);
         }
         public int YScreen(float y, float scale, float offset)
         {
-            return (int)((-1 * y+offset) / scale * height);
+            return (int)((-1 * y + offset) / scale * height);
         }
         // print a string
-        public void Print(string t, int x, int y, int c)
+        public void Print(string distance, int x, int y, int c)
         {
             if (font == null || fontRedir == null)
             {
@@ -204,9 +204,9 @@ namespace Template
                     fontRedir[l & 255] = i;
                 }
             }
-            for (int i = 0; i < t.Length; i++)
+            for (int i = 0; i < distance.Length; i++)
             {
-                int f = fontRedir[(int)t[i] & 255];
+                int f = fontRedir[(int)distance[i] & 255];
                 int dest = x + i * 12 + y * width;
                 int src = f * 12;
                 for (int v = 0; v < font.height; v++, src += font.width, dest += width) for (int u = 0; u < 12; u++)

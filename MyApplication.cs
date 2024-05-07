@@ -101,16 +101,16 @@ namespace Template
         {
             Intersection isect = null;
             // find closest intersection by checking all primitives in the scene and keeping track of the closest one
-            float t = float.MaxValue;
+            float distance = float.MaxValue;
             Primitive prim = null;
             foreach (Primitive p in primitives)
             {
                 Intersection isect2 = p.Intersect(ox, oy, oz, dx, dy, dz);
                 // if we hit an object and it is closer than the previous closest object, update the closest object
-                if (isect2 != null && isect2.distance < t)
+                if (isect2 != null && isect2.distance < distance)
                 {
 
-                    t = isect2.distance;
+                    distance = isect2.distance;
                     isect = isect2;
                     prim = p;
                 }
@@ -151,7 +151,7 @@ namespace Template
                     float dx = camera.corners[0].X + (camera.corners[1].X - camera.corners[0].X) * x / w;
                     float dz = camera.corners[0].Z + (camera.corners[1].Z - camera.corners[0].Z) * x / w;
                     float dy = camera.corners[0].Y + (camera.corners[3].Y - camera.corners[0].Y) * y / h;
-                    float t = 0;
+                    float distance = 0;
                     Primitive prim = null;
                     Intersection isect = scene.Intersect(camera.position.X, camera.position.Y, camera.position.Z, dx, dy, dz);
                     if (isect != null)
