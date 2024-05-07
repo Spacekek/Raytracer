@@ -74,7 +74,7 @@ namespace Template
             screen.Line(x1, y1, x2, y2, 0xffaa00);
         }
     }
-    
+
 
     class Scene
     {
@@ -107,10 +107,10 @@ namespace Template
             {
                 Intersection isect2 = p.Intersect(ox, oy, oz, dx, dy, dz);
                 // if we hit an object and it is closer than the previous closest object, update the closest object
-                if (isect2 != null && isect2.t < t)
+                if (isect2 != null && isect2.distance < t)
                 {
-                    
-                    t = isect2.t;
+
+                    t = isect2.distance;
                     isect = isect2;
                     prim = p;
                 }
