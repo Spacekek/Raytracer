@@ -14,6 +14,7 @@ namespace Objects
         }
 
         public abstract Intersection Intersect(Vector3 origin, Vector3 direction);
+        public abstract Vector3 Bounce(Vector3 direction);
 
         public virtual void DrawDebug(Surface screen, float scale, float x_offset, float y_offset)
         {
@@ -22,7 +23,7 @@ namespace Objects
             screen.Box(x - 2, y - 2, x + 2, y + 2, MixColor(color.R, color.G, color.B));
         }
 
-        public int MixColor(float r, float g, float b)
+        public static int MixColor(float r, float g, float b)
         {
             int red = (int)(r * 255);
             int green = (int)(g * 255);
@@ -65,6 +66,16 @@ namespace Objects
             return new Intersection(this, distance, hitPoint);
         }
 
+        public override Vector3 Bounce(Vector3 direction)
+        {
+            return direction - 2 * Vector3.Dot(direction, GetNormal(position)) * GetNormal(position);
+        }
+
+        public Vector3 GetNormal(Vector3 hitPoint)
+        {
+            return (hitPoint - position).Normalized();
+        }
+
         public override void DrawDebug(Surface screen, float scale, float x_offset, float y_offset)
         {
             int x = screen.XScreen(position.X, scale, x_offset);
@@ -100,6 +111,11 @@ namespace Objects
                 }
             }
             return null;
+        }
+
+        public override Vector3 Bounce(Vector3 direction)
+        {
+            return direction - 2 * Vector3.Dot(direction, normal) * normal;
         }
     }
     public class Light

@@ -145,26 +145,82 @@ namespace Template
             int w = screen.width;
             int h = screen.height;
             int[] pixels = screen.pixels;
+            int bounces = 0;
+            int raysPerPixel = 1;
             for (int y = 0; y < h; y++)
             {
                 for (int x = 0; x < w; x++)
                 {
-                    // ray from camera through camera plane for every pixel
-                    float dx = camera.corners[0].X + (camera.corners[1].X - camera.corners[0].X) * x / w;
-                    float dz = camera.corners[0].Z + (camera.corners[1].Z - camera.corners[0].Z) * x / w;
-                    float dy = camera.corners[0].Y + (camera.corners[3].Y - camera.corners[0].Y) * y / h;
-                    Intersection isect = scene.Intersect(new Vector3(camera.position.X, camera.position.Y, camera.position.Z), new Vector3(dx, dy, dz));
-                    if (isect != null)
-                    {
-                        // if we hit an object, set color to object color
-                        Primitive prim = isect.prim;
-                        pixels[y * w + x] = prim.MixColor(prim.color.R, prim.color.G, prim.color.B);
-                        continue;
-                    }
-                    // if we hit nothing, set color to black
-                    pixels[y * w + x] = 0;
+                    Color4[] colors = CalculateColors(x, y, bounces, raysPerPixel);
+                    Color4 blendedColor = BlendColors(colors);
+                    pixels[y * w + x] = GetPixelColor(blendedColor);
                 }
             }
+        }
+
+        private Color4[] CalculateColors(int x, int y, int bounces, int raysPerPixel)
+        {
+            int w = screen.width;
+            int h = screen.height;
+            Color4[] colors = new Color4[(bounces + 1) * raysPerPixel];
+            for (int ray = 0; ray < raysPerPixel; ray++)
+            {
+                Vector3 origin = GetCameraOrigin();
+                Vector3 direction = GetCameraDirection(x, y, w, h);
+
+                // // optional code for simple anti-aliasing, works by blurring the image
+                // // add a small random offset to the direction to create multiple rays per pixel
+                // // Random rand = new Random();
+                // direction += new Vector3((float)rand.NextDouble() * 0.01f, (float)rand.NextDouble() * 0.01f, (float)rand.NextDouble() * 0.01f);
+
+                for (int i = 0; i < bounces + 1; i++)
+                {
+                    Intersection isect = scene.Intersect(origin, direction);
+                    if (isect != null)
+                    {
+                        Primitive prim = isect.prim;
+                        colors[i * raysPerPixel + ray] = prim.color;
+                        origin = isect.hitPoint;
+                        // direction = prim.Bounce(direction, isect.hitPoint);
+                        continue;
+                    }
+                    colors[i] = new Color4(0, 0, 0, 1);
+                    break;
+                }
+            }
+            return colors;
+        }
+
+        private Color4 BlendColors(Color4[] colors)
+        {
+            float r = 0, g = 0, b = 0;
+            for (int i = 0; i < colors.Length; i++)
+            {
+            r += colors[i].R;
+            g += colors[i].G;
+            b += colors[i].B;
+            }
+            return new Color4(r / colors.Length, g / colors.Length, b / colors.Length, 1);
+        }
+
+        private int GetPixelColor(Color4 color)
+        {
+            return Primitive.MixColor(color.R, color.G, color.B);
+        }
+
+        private Vector3 GetCameraOrigin()
+        {
+            return new Vector3(camera.position.X, camera.position.Y, camera.position.Z);
+        }
+
+        private Vector3 GetCameraDirection(int x, int y, int w, int h)
+        {
+            float dx = camera.corners[0].X + (camera.corners[1].X - camera.corners[0].X) * x / w;
+            float dz = camera.corners[0].Z + (camera.corners[1].Z - camera.corners[0].Z) * x / w;
+            float dy = camera.corners[0].Y + (camera.corners[3].Y - camera.corners[0].Y) * y / h;
+            Vector3 direction = new Vector3(dx, dy, dz);
+            direction.Normalize();
+            return direction;
         }
 
         public void Debug()
