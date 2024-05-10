@@ -22,23 +22,33 @@ namespace Template
         public void Init()
         {
             // add scene objects and lights
-            Sphere sphere = new Sphere(0.0f, 0.0f, 2f, 0.1f);
+            Sphere sphere = new Sphere(0.0f, 0.0f, 2f, 0.5f);
             sphere.SetColor(0.0f, 0.0f, 1.0f);
             scene.Add(sphere);
 
-            Plane plane = new Plane(0.0f, 0.5f, 1f, 3f);
+            Sphere sphere2 = new Sphere(0.5f, 0.6f, 2.2f, 0.3f);
+            sphere2.SetColor(1.0f, 0.0f, 0.0f);
+            scene.Add(sphere2);
+
+            Plane plane = new Plane(0.0f, 0.5f, 1f, 3.5f);
             plane.SetColor(0.0f, 1.0f, 0.0f);
             scene.Add(plane);
+
+            // ground plane
+            Plane plane2 = new Plane(0.0f, 1.0f, 0.0f, 1.0f);
+            plane2.SetColor(1.0f, 1.0f, 1.0f);
+            scene.Add(plane2);
 
             scene.Add(new Light(1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f));
         }
 
         public void Tick()
         {
+            camera = new Camera((float)screen.width / screen.height);
             // every frame, clear the screen, render the scene and draw debug view
             screen.Clear(0);
             raytracer.Render();
-            // raytracer.Debug();
+            raytracer.Debug();
         }
     }
 
@@ -147,15 +157,16 @@ namespace Template
             int[] pixels = screen.pixels;
             int bounces = 0;
             int raysPerPixel = 1;
-            for (int y = 0; y < h; y++)
+            // pixels can be calculated in parallel
+            Parallel.For(0, h, y =>
             {
-                for (int x = 0; x < w; x++)
+                Parallel.For(0, w, x =>
                 {
                     Color4[] colors = CalculateColors(x, y, bounces, raysPerPixel);
                     Color4 blendedColor = BlendColors(colors);
                     pixels[y * w + x] = GetPixelColor(blendedColor);
-                }
-            }
+                });
+            });
         }
 
         private Color4[] CalculateColors(int x, int y, int bounces, int raysPerPixel)
@@ -229,14 +240,47 @@ namespace Template
             int screenCamY = screen.YScreen(camera.position.Z, scale, y_offset);
             for (int x = 0; x < screen.width; x++)
             {
-                // draw rays from camera to camera plane for every 10th pixel
+                // draw rays from camera to first intersection point
                 if (x % 10 == 0)
                 {
                     float dx = camera.corners[0].X + (camera.corners[1].X - camera.corners[0].X) * x / screen.width;
                     float dz = camera.corners[0].Z + (camera.corners[1].Z - camera.corners[0].Z) * x / screen.width;
-                    int screenRayX = screen.XScreen(dx * 20, scale, x_offset);
-                    int screenRayY = screen.YScreen(dz * 20, scale, y_offset);
-                    screen.Line(screenCamX, screenCamY, screenRayX, screenRayY, 0xff0000);
+                    int intersectX = screen.XScreen(dx * 20, scale, x_offset);
+                    int intersectY = screen.YScreen(dz * 20, scale, y_offset);
+                    Vector3 direction = new Vector3(dx, 0, dz);
+                    direction.Normalize();
+                    Intersection isect = scene.Intersect(camera.position, direction);
+                    if (isect != null)
+                    {
+                        intersectX = screen.XScreen(isect.hitPoint.X, scale, x_offset);
+                        intersectY = screen.YScreen(isect.hitPoint.Z, scale, y_offset);
+                    }
+                    screen.Line(screenCamX, screenCamY, intersectX, intersectY, 0xff0000);
+                    // draw rays from hitpoint to next intersection point
+                    for (int i = 0; i < 10; i++)
+                    {
+                        Vector3 origin = isect.hitPoint;
+                        Vector3 direction2 = isect.prim.Bounce(direction);
+                        Intersection isect2 = scene.Intersect(origin, direction2);
+                        if (isect2 != null)
+                        {
+                            int intersectX2 = screen.XScreen(isect2.hitPoint.X, scale, x_offset);
+                            int intersectY2 = screen.YScreen(isect2.hitPoint.Z, scale, y_offset);
+                            screen.Line(intersectX, intersectY, intersectX2, intersectY2, 0xffff00);
+                            intersectX = intersectX2;
+                            intersectY = intersectY2;
+                            isect = isect2;
+                            direction = direction2;
+                        }
+                        else
+                        {
+                            // line in direction of bounce
+                            int x2 = screen.XScreen(origin.X + direction2.X * 10, scale, x_offset);
+                            int y2 = screen.YScreen(origin.Z + direction2.Z * 10, scale, y_offset);
+                            screen.Line(intersectX, intersectY, x2, y2, 0x00ffff);
+                            break;
+                        }
+                    }
                 }
             }
             // draw camera triangle

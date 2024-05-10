@@ -62,7 +62,7 @@ namespace Template
         public OpenTKApp()
             : base(GameWindowSettings.Default, new NativeWindowSettings()
             {
-                ClientSize = new Vector2i(640, 400),
+                ClientSize = new Vector2i(640, 640),
                 Profile = allowPrehistoricOpenGL ? ContextProfile.Compatability : ContextProfile.Core,
                 Flags = allowPrehistoricOpenGL ? ContextFlags.Default : ContextFlags.ForwardCompatible,
             })

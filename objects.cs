@@ -18,9 +18,9 @@ namespace Objects
 
         public virtual void DrawDebug(Surface screen, float scale, float x_offset, float y_offset)
         {
-            int x = screen.XScreen(position.X, scale, x_offset);
-            int y = screen.YScreen(position.Z, scale, y_offset);
-            screen.Box(x - 2, y - 2, x + 2, y + 2, MixColor(color.R, color.G, color.B));
+            // int x = screen.XScreen(position.X, scale, x_offset);
+            // int y = screen.YScreen(position.Z, scale, y_offset);
+            // screen.Box(x - 2, y - 2, x + 2, y + 2, MixColor(color.R, color.G, color.B));
         }
 
         public static int MixColor(float r, float g, float b)
@@ -116,6 +116,14 @@ namespace Objects
         public override Vector3 Bounce(Vector3 direction)
         {
             return direction - 2 * Vector3.Dot(direction, normal) * normal;
+        }
+
+        public override void DrawDebug(Surface screen, float scale, float x_offset, float y_offset)
+        {
+            int x = screen.XScreen(position.X, scale, x_offset);
+            int y = screen.YScreen(position.Z, scale, y_offset);
+            screen.Line(x - 10, y, x + 10, y, 0xff0000);
+            screen.Line(x, y - 10, x, y + 10, 0xff0000);
         }
     }
     public class Light
