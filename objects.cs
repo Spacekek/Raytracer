@@ -3,14 +3,31 @@ using Template;
 
 namespace Objects
 {
+    public class Material
+    {
+        public Color4 diffuseColor;
+        public Color4 specularColor;
+        public float diffuse;
+        public float specular;
+        public float reflection;
+
+        public Material(float diffuse, float specular, float reflection)
+        {
+            this.diffuse = diffuse;
+            this.specular = specular;
+            this.reflection = reflection;
+            specularColor = new Color4(1, 1, 1, 1);
+            diffuseColor = new Color4(1, 1, 1, 1);
+        }
+    }
     public abstract class Primitive
     {
         public Vector3 position;
-        public Color4 color;
+        public Material material;
 
         public Primitive()
         {
-            color = new Color4(1.0f, 1.0f, 1.0f, 1);
+            material = new Material(1, 0, 0);
         }
 
         public abstract Intersection Intersect(Vector3 origin, Vector3 direction);
@@ -33,7 +50,12 @@ namespace Objects
 
         public void SetColor(float r, float g, float b)
         {
-            color = new Color4(r, g, b, 1);
+            material.diffuseColor = new Color4(r, g, b, 1);
+        }
+
+        public virtual Color4 GetColor(Vector3 hitPoint)
+        {
+            return material.diffuseColor;
         }
     }
 
@@ -81,7 +103,7 @@ namespace Objects
             int x = screen.XScreen(position.X, scale, x_offset);
             int y = screen.YScreen(position.Z, scale, y_offset);
             int r = (int)(radius * screen.width / scale);
-            screen.Circle(x, y, r, MixColor(color.R, color.G, color.B));
+            screen.Circle(x, y, r, MixColor(material.diffuseColor.R, material.diffuseColor.G, material.diffuseColor.B));
         }
     }
 

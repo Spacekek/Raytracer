@@ -44,7 +44,6 @@ namespace Template
 
         public void Tick()
         {
-            camera = new Camera((float)screen.width / screen.height);
             // every frame, clear the screen, render the scene and draw debug view
             screen.Clear(0);
             raytracer.Render();
@@ -190,7 +189,7 @@ namespace Template
                     if (isect != null)
                     {
                         Primitive prim = isect.prim;
-                        colors[i * raysPerPixel + ray] = prim.color;
+                        colors[i * raysPerPixel + ray] = prim.GetColor(isect.hitPoint);
                         origin = isect.hitPoint;
                         // direction = prim.Bounce(direction, isect.hitPoint);
                         continue;
