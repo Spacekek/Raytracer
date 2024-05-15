@@ -1,5 +1,6 @@
 using OpenTK.Mathematics;
 using Objects;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Template
 {
@@ -9,6 +10,7 @@ namespace Template
         private Camera camera;
         private Scene scene;
         private Raytracer raytracer;
+        private bool debug;
 
         public MyApplication(Surface screen)
         {
@@ -17,13 +19,17 @@ namespace Template
             camera = new Camera((float)screen.width / screen.height);
             scene = new Scene();
             raytracer = new Raytracer(scene, camera, screen);
+            debug = false;
         }
 
         public void Init()
         {
             // add scene objects and lights
             Sphere sphere = new Sphere(0.0f, 0.0f, 2f, 0.5f);
+            Material material = new Material(1.0f, 0, 0);
+            sphere.material = material;
             sphere.SetColor(0.0f, 0.0f, 1.0f);
+
             scene.Add(sphere);
 
             Sphere sphere2 = new Sphere(0.5f, 0.6f, 2.2f, 0.3f);
@@ -39,7 +45,7 @@ namespace Template
             plane2.SetColor(1.0f, 1.0f, 1.0f);
             scene.Add(plane2);
 
-            scene.Add(new Light(1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f));
+            scene.Add(new Light(1.0f, -1.0f, 1.5f));
         }
 
         public void Tick()
@@ -47,7 +53,18 @@ namespace Template
             // every frame, clear the screen, render the scene and draw debug view
             screen.Clear(0);
             raytracer.Render();
-            raytracer.Debug();
+            if (debug)
+            {
+                raytracer.Debug();
+            }
+        }
+        public void UpdateKeyboard(KeyboardState state)
+        {
+            // toggle debug view on key press
+            if (state.IsKeyDown(Keys.Space))
+            {
+                debug = !debug;
+            }
         }
     }
 
@@ -189,7 +206,7 @@ namespace Template
                     if (isect != null)
                     {
                         Primitive prim = isect.prim;
-                        colors[i * raysPerPixel + ray] = prim.GetColor(isect.hitPoint);
+                        colors[i * raysPerPixel + ray] = prim.Shade(isect.hitPoint, direction, scene.lights);
                         origin = isect.hitPoint;
                         // direction = prim.Bounce(direction, isect.hitPoint);
                         continue;
@@ -253,33 +270,15 @@ namespace Template
                     {
                         intersectX = screen.XScreen(isect.hitPoint.X, scale, x_offset);
                         intersectY = screen.YScreen(isect.hitPoint.Z, scale, y_offset);
+                        // draw rays from hitpoint to next intersection point
+                        Vector3 origin = isect.hitPoint;
+                        Vector3 direction2 = isect.prim.Bounce(direction, isect.hitPoint);
+                        // line in direction of bounce
+                        int x2 = screen.XScreen(origin.X + direction2.X * 10, scale, x_offset);
+                        int y2 = screen.YScreen(origin.Z + direction2.Z * 10, scale, y_offset);
+                        screen.Line(intersectX, intersectY, x2, y2, 0x00ffff);
                     }
                     screen.Line(screenCamX, screenCamY, intersectX, intersectY, 0xff0000);
-                    // draw rays from hitpoint to next intersection point
-                    for (int i = 0; i < 10; i++)
-                    {
-                        Vector3 origin = isect.hitPoint;
-                        Vector3 direction2 = isect.prim.Bounce(direction);
-                        Intersection isect2 = scene.Intersect(origin, direction2);
-                        if (isect2 != null)
-                        {
-                            int intersectX2 = screen.XScreen(isect2.hitPoint.X, scale, x_offset);
-                            int intersectY2 = screen.YScreen(isect2.hitPoint.Z, scale, y_offset);
-                            screen.Line(intersectX, intersectY, intersectX2, intersectY2, 0xffff00);
-                            intersectX = intersectX2;
-                            intersectY = intersectY2;
-                            isect = isect2;
-                            direction = direction2;
-                        }
-                        else
-                        {
-                            // line in direction of bounce
-                            int x2 = screen.XScreen(origin.X + direction2.X * 10, scale, x_offset);
-                            int y2 = screen.YScreen(origin.Z + direction2.Z * 10, scale, y_offset);
-                            screen.Line(intersectX, intersectY, x2, y2, 0x00ffff);
-                            break;
-                        }
-                    }
                 }
             }
             // draw camera triangle

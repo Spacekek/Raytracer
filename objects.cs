@@ -31,7 +31,7 @@ namespace Objects
         }
 
         public abstract Intersection Intersect(Vector3 origin, Vector3 direction);
-        public abstract Vector3 Bounce(Vector3 direction);
+        public abstract Vector3 Bounce(Vector3 direction, Vector3 hitPoint);
 
         public virtual void DrawDebug(Surface screen, float scale, float x_offset, float y_offset)
         {
@@ -53,9 +53,33 @@ namespace Objects
             material.diffuseColor = new Color4(r, g, b, 1);
         }
 
-        public virtual Color4 GetColor(Vector3 hitPoint)
+        public virtual Vector3 GetNormal(Vector3 hitPoint)
         {
-            return material.diffuseColor;
+            return new Vector3(0, 0, 0);
+        }
+
+        public virtual Color4 Shade(Vector3 hitPoint, Vector3 viewDir, List<Light> lights)
+        {
+            Vector3 normal = GetNormal(hitPoint);
+            Vector4 finalColor = new Vector4(0, 0, 0, 1);
+
+            foreach (Light light in lights)
+            {
+                Vector3 lightDir = (light.position - hitPoint).Normalized();
+                float diffuse = Math.Max(Vector3.Dot(normal, lightDir), 0);
+                Vector3 reflectDir = Bounce(-lightDir, hitPoint);
+                float specular = (float)Math.Pow(Math.Max(Vector3.Dot(reflectDir, viewDir), 0), 32);
+
+                Vector4 lightColor = new Vector4(
+                    material.diffuseColor.R * diffuse * material.diffuse + material.specularColor.R * specular * material.specular,
+                    material.diffuseColor.G * diffuse * material.diffuse + material.specularColor.G * specular * material.specular,
+                    material.diffuseColor.B * diffuse * material.diffuse + material.specularColor.B * specular * material.specular,
+                    1);
+
+                finalColor += lightColor;
+            }
+
+            return (Color4)finalColor;
         }
     }
 
@@ -81,19 +105,19 @@ namespace Objects
 
             if (discriminant < 0) return null;
             // Calculate the distance to the intersection point
-            float distance = (-b - (float)System.Math.Sqrt(discriminant)) / (2 * a);
+            float distance = (-b - (float)Math.Sqrt(discriminant)) / (2 * a);
             // Calculate the intersection point
             Vector3 hitPoint = new Vector3(origin + direction * distance);
 
             return new Intersection(this, distance, hitPoint);
         }
 
-        public override Vector3 Bounce(Vector3 direction)
+        public override Vector3 Bounce(Vector3 direction, Vector3 hitPoint)
         {
-            return direction - 2 * Vector3.Dot(direction, GetNormal(position)) * GetNormal(position);
+            return GetNormal(hitPoint);
         }
 
-        public Vector3 GetNormal(Vector3 hitPoint)
+        public override Vector3 GetNormal(Vector3 hitPoint)
         {
             return (hitPoint - position).Normalized();
         }
@@ -135,9 +159,14 @@ namespace Objects
             return null;
         }
 
-        public override Vector3 Bounce(Vector3 direction)
+        public override Vector3 Bounce(Vector3 direction, Vector3 hitPoint)
         {
             return direction - 2 * Vector3.Dot(direction, normal) * normal;
+        }
+
+        public override Vector3 GetNormal(Vector3 hitPoint)
+        {
+            return -normal;
         }
 
         public override void DrawDebug(Surface screen, float scale, float x_offset, float y_offset)
@@ -151,12 +180,10 @@ namespace Objects
     public class Light
     {
         public Vector3 position;
-        private Color4 color;
 
-        public Light(float x, float y, float z, float r, float g, float b)
+        public Light(float x, float y, float z)
         {
             position = new Vector3(x, y, z);
-            color = new Color4(r, g, b, 1);
         }
     }
 
