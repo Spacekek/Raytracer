@@ -52,10 +52,13 @@ namespace Template
         {
             // every frame, clear the screen, render the scene and draw debug view
             screen.Clear(0);
-            raytracer.Render();
             if (debug)
             {
                 raytracer.Debug();
+            }
+            else
+            {
+                raytracer.Render();
             }
         }
         public void UpdateKeyboard(KeyboardState state)
@@ -197,8 +200,8 @@ namespace Template
 
                 // // optional code for simple anti-aliasing, works by blurring the image
                 // // add a small random offset to the direction to create multiple rays per pixel
-                // // Random rand = new Random();
-                // direction += new Vector3((float)rand.NextDouble() * 0.01f, (float)rand.NextDouble() * 0.01f, (float)rand.NextDouble() * 0.01f);
+                // Random rand = new Random();
+                // direction += new Vector3((float)rand.NextDouble() * 0.0025f, (float)rand.NextDouble() * 0.0025f, (float)rand.NextDouble() * 0.0025f);
 
                 for (int i = 0; i < bounces + 1; i++)
                 {
