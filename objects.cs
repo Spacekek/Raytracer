@@ -6,16 +6,16 @@ namespace Objects
     public class Material
     {
         public Color4 diffuseColor;
-        public Color4 specularColor;
+        public Color4 glossyColor;
         public Color4 ambientColor;
         public float diffuse;
         public float specular;
 
-        public Material(float diffuse, float specular)
+        public Material(float diffuse)
         {
             this.diffuse = diffuse;
-            this.specular = specular;
-            specularColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
+            this.specular = 0.0f;
+            glossyColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
             diffuseColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
             ambientColor = new Color4(0.0f, 0.0f, 0.0f, 1.0f);
         }
@@ -27,7 +27,7 @@ namespace Objects
 
         public Primitive()
         {
-            material = new Material(1, 0);
+            material = new Material(1.0f);
         }
 
         public abstract Intersection Intersect(Vector3 origin, Vector3 direction);
@@ -55,7 +55,7 @@ namespace Objects
 
         public abstract Vector3 GetNormal(Vector3 hitPoint);
 
-        public virtual Color4 Shade(Vector3 hitPoint, Vector3 viewDir, List<Light> lights, Scene scene)
+        public virtual Color4 Shade(Vector3 hitPoint, Vector3 viewDir, List<Light> lights, Scene scene, int depth)
         {
             Vector3 normal = GetNormal(hitPoint);
             Vector4 finalColor = new Vector4(0, 0, 0, 1);
@@ -76,7 +76,15 @@ namespace Objects
                 // reflection
                 Vector3 reflection = shadowRay - 2 * Vector3.Dot(shadowRay, normal) * normal;
                 float n = 250;
-                Vector4 glossyColor = (float)Math.Pow(Math.Max(Vector3.Dot(reflection, viewDir), 0), n) * (Vector4)material.specularColor;
+                Vector4 glossyColor = (float)Math.Pow(Math.Max(Vector3.Dot(reflection, viewDir), 0), n) * (Vector4)material.glossyColor;
+                Vector3 specularDir = (viewDir - 2 * Vector3.Dot(viewDir, normal) * normal).Normalized();
+                Intersection intersection = scene.Intersect(hitPoint, specularDir);
+                
+                if (intersection != null && depth < 5)
+                {
+                    var prim = intersection.prim;
+                    finalColor += (Vector4)prim.Shade(intersection.hitPoint, specularDir, lights, scene, depth + 1) * material.specular;
+                }
 
                 finalColor += (Vector4)light.color * 1/(distance * distance) * (diffusecolor + glossyColor) + (Vector4)material.ambientColor * 0.3f;
             }

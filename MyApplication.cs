@@ -26,7 +26,7 @@ namespace Template
         {
             // add scene objects and lights
             Sphere sphere = new Sphere(0.0f, 0.0f, 2f, 0.5f);
-            Material material = new Material(1.0f, 1.0f);
+            Material material = new Material(1.0f);
             material.ambientColor = new Color4(0.2f, 0.2f, 0.2f, 1.0f);
             sphere.material = material;
             sphere.SetColor(0.0f, 0.8f, 1.0f);
@@ -34,13 +34,13 @@ namespace Template
             scene.Add(sphere);
 
             Sphere sphere2 = new Sphere(0.5f, 0.6f, 2.2f, 0.3f);
-            Material material1 = new Material(1.0f, 0.0f);
+            Material material1 = new Material(1.0f);
             material1.ambientColor = new Color4(0.6f, 0.6f, 0.6f, 1.0f);
             sphere2.SetColor(1.0f, 0.0f, 0.0f);
             scene.Add(sphere2);
 
             Plane plane = new Plane(0.0f, -1.0f, -1f, 3.5f);
-            Material material2 = new Material(1.0f, 0.0f);
+            Material material2 = new Material(1.0f);
             material2.ambientColor = new Color4(0.2f, 0.6f, 0.2f, 1.0f);
             plane.material = material2;
             plane.SetColor(0.0f, 1.0f, 0.0f);
@@ -48,8 +48,9 @@ namespace Template
 
             // ground plane
             Plane plane2 = new Plane(0.0f, -1.0f, 0.0f, 1.0f);
-            Material material3 = new Material(1.0f, 0.0f);
+            Material material3 = new Material(1.0f);
             material3.ambientColor = new Color4(0.5f, 0.5f, 0.5f, 1.0f);
+            material3.specular = 1.0f;
             plane2.material = material3;
             plane2.SetColor(1.0f, 1.0f, 1.0f);
             scene.Add(plane2);
@@ -156,7 +157,7 @@ namespace Template
             lights.Add(l);
         }
 
-        public Intersection Intersect(Vector3 origin, Vector3 direction)
+        public Intersection Intersect(Vector3 origin, Vector3 direction, float epsilon = 0.0001f)
         {
             Intersection isect = null;
             // find closest intersection by checking all primitives in the scene and keeping track of the closest one
@@ -165,7 +166,7 @@ namespace Template
             {
                 Intersection isect2 = p.Intersect(origin, direction);
                 // if we hit an object and it is closer than the previous closest object, update the closest object
-                if (isect2 != null && isect2.distance < distance)
+                if (isect2 != null && isect2.distance < distance && isect2.distance > epsilon)
                 {
                     distance = isect2.distance;
                     isect = isect2;
@@ -248,7 +249,7 @@ namespace Template
                     if (isect != null)
                     {
                         Primitive prim = isect.prim;
-                        colors[i * raysPerPixel + ray] = prim.Shade(isect.hitPoint, direction, scene.lights, scene);
+                        colors[i * raysPerPixel + ray] = prim.Shade(isect.hitPoint, direction, scene.lights, scene, 0);
                         origin = isect.hitPoint;
                         // direction = prim.Bounce(direction, isect.hitPoint);
                         continue;
