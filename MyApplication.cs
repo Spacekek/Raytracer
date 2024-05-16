@@ -26,22 +26,31 @@ namespace Template
         {
             // add scene objects and lights
             Sphere sphere = new Sphere(0.0f, 0.0f, 2f, 0.5f);
-            Material material = new Material(1.0f, 1.0f, 0);
+            Material material = new Material(1.0f, 1.0f);
+            material.ambientColor = new Color4(0.2f, 0.2f, 0.2f, 1.0f);
             sphere.material = material;
             sphere.SetColor(0.0f, 0.8f, 1.0f);
 
             scene.Add(sphere);
 
             Sphere sphere2 = new Sphere(0.5f, 0.6f, 2.2f, 0.3f);
+            Material material1 = new Material(1.0f, 0.0f);
+            material1.ambientColor = new Color4(0.6f, 0.6f, 0.6f, 1.0f);
             sphere2.SetColor(1.0f, 0.0f, 0.0f);
             scene.Add(sphere2);
 
-            Plane plane = new Plane(0.0f, -0.5f, -1f, 3.5f);
+            Plane plane = new Plane(0.0f, -1.0f, -1f, 3.5f);
+            Material material2 = new Material(1.0f, 0.0f);
+            material2.ambientColor = new Color4(0.2f, 0.6f, 0.2f, 1.0f);
+            plane.material = material2;
             plane.SetColor(0.0f, 1.0f, 0.0f);
             scene.Add(plane);
 
             // ground plane
             Plane plane2 = new Plane(0.0f, -1.0f, 0.0f, 1.0f);
+            Material material3 = new Material(1.0f, 0.0f);
+            material3.ambientColor = new Color4(0.5f, 0.5f, 0.5f, 1.0f);
+            plane2.material = material3;
             plane2.SetColor(1.0f, 1.0f, 1.0f);
             scene.Add(plane2);
 

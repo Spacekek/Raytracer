@@ -7,17 +7,17 @@ namespace Objects
     {
         public Color4 diffuseColor;
         public Color4 specularColor;
+        public Color4 ambientColor;
         public float diffuse;
         public float specular;
-        public float reflection;
 
-        public Material(float diffuse, float specular, float reflection)
+        public Material(float diffuse, float specular)
         {
             this.diffuse = diffuse;
             this.specular = specular;
-            this.reflection = reflection;
             specularColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
-            diffuseColor = new Color4(1, 1, 1, 1);
+            diffuseColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
+            ambientColor = new Color4(0.0f, 0.0f, 0.0f, 1.0f);
         }
     }
     public abstract class Primitive
@@ -27,7 +27,7 @@ namespace Objects
 
         public Primitive()
         {
-            material = new Material(1, 0, 0);
+            material = new Material(1, 0);
         }
 
         public abstract Intersection Intersect(Vector3 origin, Vector3 direction);
@@ -78,7 +78,7 @@ namespace Objects
                 float n = 250;
                 Vector4 glossyColor = (float)Math.Pow(Math.Max(Vector3.Dot(reflection, viewDir), 0), n) * (Vector4)material.specularColor;
 
-                finalColor += (Vector4)light.color * 1/(distance * distance) * (diffusecolor + glossyColor);
+                finalColor += (Vector4)light.color * 1/(distance * distance) * (diffusecolor + glossyColor) + (Vector4)material.ambientColor * 0.3f;
             }
             // max 1.0
             finalColor.X = Math.Min(finalColor.X, 1);
