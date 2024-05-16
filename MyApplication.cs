@@ -126,7 +126,7 @@ namespace Template
     }
 
 
-    class Scene
+    public class Scene
     {
         public List<Primitive> primitives;
         public List<Light> lights;
@@ -164,6 +164,20 @@ namespace Template
             }
             return isect;
         }
+        
+        public bool IsInShadow(Vector3 origin, Vector3 direction, float epsilon)
+        {
+            // check if a point is in shadow by casting a ray from the point to the light source
+            foreach (Primitive p in primitives)
+            {
+                Intersection isect = p.Intersect(origin, direction);
+                if (isect != null && isect.distance > epsilon)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     class Raytracer
@@ -191,7 +205,7 @@ namespace Template
             int h = screen.height;
             int[] pixels = screen.pixels;
             int bounces = 0;
-            int raysPerPixel = 5;
+            int raysPerPixel = 1;
             // pixels can be calculated in parallel
             Parallel.For(0, h, y =>
             {
@@ -216,8 +230,8 @@ namespace Template
 
                 // // optional code for simple anti-aliasing, works by blurring the image
                 // // add a small random offset to the direction to create multiple rays per pixel
-                Random rand = new Random();
-                direction += new Vector3((float)rand.NextDouble() * 0.0025f, (float)rand.NextDouble() * 0.0025f, (float)rand.NextDouble() * 0.0025f);
+                // Random rand = new Random();
+                // direction += new Vector3((float)rand.NextDouble() * 0.0025f, (float)rand.NextDouble() * 0.0025f, (float)rand.NextDouble() * 0.0025f);
 
                 for (int i = 0; i < bounces + 1; i++)
                 {
@@ -225,7 +239,7 @@ namespace Template
                     if (isect != null)
                     {
                         Primitive prim = isect.prim;
-                        colors[i * raysPerPixel + ray] = prim.Shade(isect.hitPoint, direction, scene.lights);
+                        colors[i * raysPerPixel + ray] = prim.Shade(isect.hitPoint, direction, scene.lights, scene);
                         origin = isect.hitPoint;
                         // direction = prim.Bounce(direction, isect.hitPoint);
                         continue;

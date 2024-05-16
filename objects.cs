@@ -55,22 +55,27 @@ namespace Objects
 
         public abstract Vector3 GetNormal(Vector3 hitPoint);
 
-        public virtual Color4 Shade(Vector3 hitPoint, Vector3 viewDir, List<Light> lights)
+        public virtual Color4 Shade(Vector3 hitPoint, Vector3 viewDir, List<Light> lights, Scene scene)
         {
             Vector3 normal = GetNormal(hitPoint);
             Vector4 finalColor = new Vector4(0, 0, 0, 1);
 
             foreach (Light light in lights)
             {
-                Vector3 lightDir = (light.position - hitPoint).Normalized();
-                float diffuse = Math.Max(Vector3.Dot(normal, lightDir), 0);
-                Vector3 reflectDir = Bounce(-lightDir, hitPoint);
-                float specular = (float)Math.Pow(Math.Max(Vector3.Dot(reflectDir, viewDir), 0), 32);
+                Vector3 shadowRay = (light.position - hitPoint).Normalized();
+                // distance to lightsource
+                float distance = (light.position - hitPoint).Length;
+                float diffuse = Math.Max(Vector3.Dot(normal, shadowRay), 0) / distance;
+                // if the shadowRay intersects with any object, then the point is in shadow
+                if (scene.IsInShadow(hitPoint, shadowRay, 0.0001f))
+                {
+                    diffuse = 0;
+                }
 
                 Vector4 lightColor = new Vector4(
-                    material.diffuseColor.R * diffuse * material.diffuse + material.specularColor.R * specular * material.specular,
-                    material.diffuseColor.G * diffuse * material.diffuse + material.specularColor.G * specular * material.specular,
-                    material.diffuseColor.B * diffuse * material.diffuse + material.specularColor.B * specular * material.specular,
+                    material.diffuseColor.R * diffuse * material.diffuse * light.color.R,
+                    material.diffuseColor.G * diffuse * material.diffuse * light.color.G,
+                    material.diffuseColor.B * diffuse * material.diffuse * light.color.B,
                     1);
 
                 finalColor += lightColor;
@@ -177,10 +182,12 @@ namespace Objects
     public class Light
     {
         public Vector3 position;
+        public Color4 color;
 
         public Light(float x, float y, float z)
         {
             position = new Vector3(x, y, z);
+            color = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
         }
     }
 
