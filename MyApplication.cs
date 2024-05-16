@@ -36,12 +36,12 @@ namespace Template
             sphere2.SetColor(1.0f, 0.0f, 0.0f);
             scene.Add(sphere2);
 
-            Plane plane = new Plane(0.0f, 0.5f, 1f, 3.5f);
+            Plane plane = new Plane(0.0f, -0.5f, -1f, 3.5f);
             plane.SetColor(0.0f, 1.0f, 0.0f);
             scene.Add(plane);
 
             // ground plane
-            Plane plane2 = new Plane(0.0f, 1.0f, 0.0f, 1.0f);
+            Plane plane2 = new Plane(0.0f, -1.0f, 0.0f, 1.0f);
             plane2.SetColor(1.0f, 1.0f, 1.0f);
             scene.Add(plane2);
 

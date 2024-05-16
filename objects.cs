@@ -53,10 +53,7 @@ namespace Objects
             material.diffuseColor = new Color4(r, g, b, 1);
         }
 
-        public virtual Vector3 GetNormal(Vector3 hitPoint)
-        {
-            return new Vector3(0, 0, 0);
-        }
+        public abstract Vector3 GetNormal(Vector3 hitPoint);
 
         public virtual Color4 Shade(Vector3 hitPoint, Vector3 viewDir, List<Light> lights)
         {
@@ -138,7 +135,7 @@ namespace Objects
 
         public Plane(float nx, float ny, float nz, float d)
         {
-            normal = new Vector3(nx, ny, nz);
+            normal = new Vector3(nx, ny, nz).Normalized();
             this.d = d;
             position = new Vector3(d / normal.X, d / normal.Y, d / normal.Z);
         }
@@ -146,10 +143,10 @@ namespace Objects
         public override Intersection Intersect(Vector3 origin, Vector3 direction)
         {
             // ray-plane intersection
-            float denominator = Vector3.Dot(normal, direction);
+            float denominator = Vector3.Dot(-normal, direction);
             if (denominator > 0.0001f)
             {
-                float t = (d - Vector3.Dot(normal, origin)) / denominator;
+                float t = (d - Vector3.Dot(-normal, origin)) / denominator;
                 if (t >= 0)
                 {
                     Vector3 hitPoint = new Vector3(origin + direction * t);
@@ -166,7 +163,7 @@ namespace Objects
 
         public override Vector3 GetNormal(Vector3 hitPoint)
         {
-            return -normal;
+            return normal;
         }
 
         public override void DrawDebug(Surface screen, float scale, float x_offset, float y_offset)
