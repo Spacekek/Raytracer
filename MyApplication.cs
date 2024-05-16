@@ -26,9 +26,9 @@ namespace Template
         {
             // add scene objects and lights
             Sphere sphere = new Sphere(0.0f, 0.0f, 2f, 0.5f);
-            Material material = new Material(1.0f, 0, 0);
+            Material material = new Material(1.0f, 1.0f, 0);
             sphere.material = material;
-            sphere.SetColor(0.0f, 0.0f, 1.0f);
+            sphere.SetColor(0.0f, 0.8f, 1.0f);
 
             scene.Add(sphere);
 

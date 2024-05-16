@@ -16,7 +16,7 @@ namespace Objects
             this.diffuse = diffuse;
             this.specular = specular;
             this.reflection = reflection;
-            specularColor = new Color4(1, 1, 1, 1);
+            specularColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
             diffuseColor = new Color4(1, 1, 1, 1);
         }
     }
@@ -65,22 +65,25 @@ namespace Objects
                 Vector3 shadowRay = (light.position - hitPoint).Normalized();
                 // distance to lightsource
                 float distance = (light.position - hitPoint).Length;
-                float diffuse = Math.Max(Vector3.Dot(normal, shadowRay), 0) / distance;
+                float diffuse = Math.Max(Vector3.Dot(normal, shadowRay), 0);
                 // if the shadowRay intersects with any object, then the point is in shadow
                 if (scene.IsInShadow(hitPoint, shadowRay, 0.0001f))
                 {
                     diffuse = 0;
                 }
+                Vector4 diffusecolor = (Vector4)material.diffuseColor * diffuse;
 
-                Vector4 lightColor = new Vector4(
-                    material.diffuseColor.R * diffuse * material.diffuse * light.color.R,
-                    material.diffuseColor.G * diffuse * material.diffuse * light.color.G,
-                    material.diffuseColor.B * diffuse * material.diffuse * light.color.B,
-                    1);
+                // reflection
+                Vector3 reflection = shadowRay - 2 * Vector3.Dot(shadowRay, normal) * normal;
+                float n = 250;
+                Vector4 glossyColor = (float)Math.Pow(Math.Max(Vector3.Dot(reflection, viewDir), 0), n) * (Vector4)material.specularColor;
 
-                finalColor += lightColor;
+                finalColor += (Vector4)light.color * 1/(distance * distance) * (diffusecolor + glossyColor);
             }
-
+            // max 1.0
+            finalColor.X = Math.Min(finalColor.X, 1);
+            finalColor.Y = Math.Min(finalColor.Y, 1);
+            finalColor.Z = Math.Min(finalColor.Z, 1);
             return (Color4)finalColor;
         }
     }
@@ -187,7 +190,7 @@ namespace Objects
         public Light(float x, float y, float z)
         {
             position = new Vector3(x, y, z);
-            color = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
+            color = new Color4(2.0f, 2.0f, 2.0f, 1.0f);
         }
     }
 
