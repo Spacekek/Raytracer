@@ -68,13 +68,29 @@ namespace Template
             {
                 debug = !debug;
             }
+            if (state.IsKeyDown(Keys.W))
+            {
+                camera.position.Z += 0.1f;
+            }
+            if (state.IsKeyDown(Keys.S))
+            {
+                camera.position.Z -= 0.1f;
+            }
+            if (state.IsKeyDown(Keys.A))
+            {
+                camera.position.X -= 0.1f;
+            }
+            if (state.IsKeyDown(Keys.D))
+            {
+                camera.position.X += 0.1f;
+            }
         }
     }
 
     class Camera
     {
         public Vector3 position;
-        private Vector3 direction;
+        public Vector3 direction;
         private Vector3 up;
         private float fov;
         public Vector3[] corners;
@@ -175,7 +191,7 @@ namespace Template
             int h = screen.height;
             int[] pixels = screen.pixels;
             int bounces = 0;
-            int raysPerPixel = 1;
+            int raysPerPixel = 5;
             // pixels can be calculated in parallel
             Parallel.For(0, h, y =>
             {
@@ -200,8 +216,8 @@ namespace Template
 
                 // // optional code for simple anti-aliasing, works by blurring the image
                 // // add a small random offset to the direction to create multiple rays per pixel
-                // Random rand = new Random();
-                // direction += new Vector3((float)rand.NextDouble() * 0.0025f, (float)rand.NextDouble() * 0.0025f, (float)rand.NextDouble() * 0.0025f);
+                Random rand = new Random();
+                direction += new Vector3((float)rand.NextDouble() * 0.0025f, (float)rand.NextDouble() * 0.0025f, (float)rand.NextDouble() * 0.0025f);
 
                 for (int i = 0; i < bounces + 1; i++)
                 {
