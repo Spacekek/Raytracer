@@ -26,31 +26,31 @@ namespace Template
         {
             Material cyan = new Material(1.0f)
             {
-            diffuseColor = new Color4(0.75f, 0.95f, 1.0f, 1.0f),
-            ambientColor = new Color4(0.02f, 0.05f, 0.1f, 1.0f)
+                diffuseColor = new Vector4(0.75f, 0.95f, 1.0f, 1.0f),
+                ambientColor = new Vector4(0.02f, 0.05f, 0.1f, 1.0f)
             };
             Material green = new Material(1.0f)
             {
-            diffuseColor = new Color4(0.8f, 1.0f, 0.8f, 1.0f),
-            ambientColor = new Color4(0.06f, 0.08f, 0.06f, 1.0f)
+                diffuseColor = new Vector4(0.8f, 1.0f, 0.8f, 1.0f),
+                ambientColor = new Vector4(0.06f, 0.08f, 0.06f, 1.0f)
             };
             Material mirror = new Material(0.0f)
             {
-            specular = 1.0f,
-            glossyColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f),
-            ambientColor = new Color4(0.0f, 0.0f, 0.0f, 1.0f),
-            diffuseColor = new Color4(0.0f, 0.0f, 0.0f, 1.0f)
+                specular = 1.0f,
+                glossyColor = new Vector4(1.0f, 1.0f, 1.0f, 1.0f),
+                ambientColor = new Vector4(0.0f, 0.0f, 0.0f, 1.0f),
+                diffuseColor = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)
             };
             Material orange = new Material(1.0f)
             {
-            diffuseColor = new Color4(1.0f, 0.85f, 0.7f, 1.0f),
-            ambientColor = new Color4(0.07f, 0.05f, 0.05f, 1.0f),
-            specular = 0.5f
+                diffuseColor = new Vector4(1.0f, 0.85f, 0.7f, 1.0f),
+                ambientColor = new Vector4(0.07f, 0.05f, 0.05f, 1.0f),
+                specular = 0.5f
             };
             Material pink = new Material(1.0f)
             {
-            diffuseColor = new Color4(1.0f, 0.8f, 0.95f, 1.0f),
-            ambientColor = new Color4(0.07f, 0.05f, 0.05f, 1.0f),
+                diffuseColor = new Vector4(1.0f, 0.8f, 0.95f, 1.0f),
+                ambientColor = new Vector4(0.07f, 0.05f, 0.05f, 1.0f),
             };
 
             // add scene objects and lights
@@ -72,55 +72,33 @@ namespace Template
             // every frame, clear the screen, render the scene and draw debug view
             screen.Clear(0);
             if (debug)
-            {
                 raytracer.Debug();
-            }
             else
-            {
                 raytracer.Render();
-            }
         }
         public void UpdateKeyboard(KeyboardState state)
         {
             // toggle debug view on key press
-            if (state.IsKeyDown(Keys.Space))
-            {
-                debug = !debug;
-            }
-            if (state.IsKeyDown(Keys.W))
-            {
-                camera.position += camera.direction * 0.1f; // Move forward
-            }
-            if (state.IsKeyDown(Keys.S))
-            {
-                camera.position -= camera.direction * 0.1f; // Move backward
-            }
-            if (state.IsKeyDown(Keys.A))
-            {
-                Vector3 left = Vector3.Cross(camera.up, camera.direction).Normalized();
-                camera.position -= left * 0.1f; // Move left
-            }
-            if (state.IsKeyDown(Keys.D))
-            {
-                Vector3 right = Vector3.Cross(camera.up, camera.direction).Normalized();
-                camera.position += right * 0.1f; // Move right
-            }
-            if (state.IsKeyDown(Keys.Left))
-            {
-                camera.RotateYaw(-1.0f); // Rotate left
-            }
-            if (state.IsKeyDown(Keys.Right))
-            {
-                camera.RotateYaw(1.0f); // Rotate right
-            }
-            if (state.IsKeyDown(Keys.Up))
-            {
-                camera.RotatePitch(1.0f); // Look up
-            }
-            if (state.IsKeyDown(Keys.Down))
-            {
-                camera.RotatePitch(-1.0f); // Look down
-            }
+            debug = state.IsKeyDown(Keys.Space) ? !debug : debug;
+
+            // Move forward/backward
+            float moveSpeed = 0.1f;
+            camera.position += state.IsKeyDown(Keys.W) ? camera.direction * moveSpeed : Vector3.Zero;
+            camera.position -= state.IsKeyDown(Keys.S) ? camera.direction * moveSpeed : Vector3.Zero;
+
+            // Move left/right
+            Vector3 left = Vector3.Cross(camera.up, camera.direction).Normalized();
+            camera.position -= state.IsKeyDown(Keys.A) ? left * moveSpeed : Vector3.Zero;
+            camera.position += state.IsKeyDown(Keys.D) ? left * moveSpeed : Vector3.Zero;
+
+            // Rotate left/right
+            float rotateSpeed = 1.0f;
+            camera.RotateYaw(state.IsKeyDown(Keys.Left) ? -rotateSpeed : 0.0f);
+            camera.RotateYaw(state.IsKeyDown(Keys.Right) ? rotateSpeed : 0.0f);
+
+            // Look up/down
+            camera.RotatePitch(state.IsKeyDown(Keys.Up) ? rotateSpeed : 0.0f);
+            camera.RotatePitch(state.IsKeyDown(Keys.Down) ? -rotateSpeed : 0.0f);
         }
     }
 
@@ -208,25 +186,17 @@ namespace Template
             primitives = new List<Primitive>();
             lights = new List<Light>();
         }
+        public void Add(Primitive p){primitives.Add(p);}
+        public void Add(Light l){lights.Add(l);}
 
-        public void Add(Primitive p)
+        public Intersection? Intersect(Vector3 origin, Vector3 direction, float epsilon = 0.0001f)
         {
-            primitives.Add(p);
-        }
-
-        public void Add(Light l)
-        {
-            lights.Add(l);
-        }
-
-        public Intersection Intersect(Vector3 origin, Vector3 direction, float epsilon = 0.0001f)
-        {
-            Intersection isect = null;
+            Intersection? isect = null;
             // find closest intersection by checking all primitives in the scene and keeping track of the closest one
             float distance = float.MaxValue;
             foreach (Primitive p in primitives)
             {
-                Intersection isect2 = p.Intersect(origin, direction);
+                Intersection? isect2 = p.Intersect(origin, direction);
                 // if we hit an object and it is closer than the previous closest object, update the closest object
                 if (isect2 != null && isect2.distance < distance && isect2.distance > epsilon)
                 {
@@ -242,11 +212,9 @@ namespace Template
             // check if a point is in shadow by casting a ray from the point to the light source
             foreach (Primitive p in primitives)
             {
-                Intersection isect = p.Intersect(origin, direction);
+                Intersection? isect = p.Intersect(origin, direction);
                 if (isect != null && isect.distance > epsilon && isect.distance < distance)
-                {
                     return true;
-                }
             }
             return false;
         }
@@ -284,7 +252,7 @@ namespace Template
                 {
                     Color4[] colors = CalculateColors(x, y, raysPerPixel);
                     Color4 blendedColor = BlendColors(colors);
-                    pixels[y * w + x] = GetPixelColor(blendedColor);
+                    pixels[y * w + x] = Primitive.MixColor((Vector4)blendedColor);
                 });
             });
         }
@@ -303,7 +271,7 @@ namespace Template
                 // // add a small random offset to the direction to create multiple rays per pixel
                 // Random rand = new Random();
                 // direction += new Vector3((float)rand.NextDouble() * 0.0025f, (float)rand.NextDouble() * 0.0025f, (float)rand.NextDouble() * 0.0025f);
-                Intersection isect = scene.Intersect(origin, direction);
+                Intersection? isect = scene.Intersect(origin, direction);
                 if (isect != null)
                 {
                     Primitive prim = isect.prim;
@@ -326,11 +294,6 @@ namespace Template
             b += colors[i].B;
             }
             return new Color4(r / colors.Length, g / colors.Length, b / colors.Length, 1);
-        }
-
-        private int GetPixelColor(Color4 color)
-        {
-            return Primitive.MixColor(color.R, color.G, color.B);
         }
 
         private Vector3 GetCameraDirection(int x, int y, int w, int h)
@@ -363,43 +326,39 @@ namespace Template
         {
             int screenCamX = screen.XScreen(camera.position.X, scale, x_offset);
             int screenCamY = screen.YScreen(camera.position.Z, scale, y_offset);
-            for (int x = 0; x < screen.width; x++)
+
+            for (int x = 0; x < screen.width; x += 10)
             {
-                // draw rays from camera to first intersection point
-                if (x % 10 == 0)
+                Vector3 direction = GetCameraDirection(x, 320, screen.width, screen.height);
+                int intersectX = screen.XScreen(camera.position.X + direction.X * 100, scale, x_offset);
+                int intersectY = screen.YScreen(camera.position.Z + direction.Z * 100, scale, y_offset);
+                direction.Normalize();
+                Intersection? isect = scene.Intersect(camera.position, direction);
+
+                if (isect != null)
                 {
-                    Vector3 direction = GetCameraDirection(x, 320, screen.width, screen.height);
-                    // in the case of no intersection, draw the ray to the edge of the screen
-                    int intersectX = screen.XScreen(camera.position.X + direction.X * 100, scale, x_offset);
-                    int intersectY = screen.YScreen(camera.position.Z + direction.Z * 100, scale, y_offset);
-                    direction.Normalize();
-                    Intersection isect = scene.Intersect(camera.position, direction);
-                    if (isect != null)
-                    {
-                        intersectX = screen.XScreen(isect.hitPoint.X, scale, x_offset);
-                        intersectY = screen.YScreen(isect.hitPoint.Z, scale, y_offset);
-                        // draw rays from hitpoint to next intersection point
-                        Vector3 origin = isect.hitPoint;
-                        Vector3 normal = isect.prim.GetNormal(isect.hitPoint);
-                        Vector3 direction2 = direction - 2 * Vector3.Dot(direction, normal) * normal;
-                        // line in direction of bounce
-                        int x2 = screen.XScreen(origin.X + direction2.X * 10, scale, x_offset);
-                        int y2 = screen.YScreen(origin.Z + direction2.Z * 10, scale, y_offset);
-                        screen.Line(intersectX, intersectY, x2, y2, 0x00ffff);
-                    }
-                    screen.Line(screenCamX, screenCamY, intersectX, intersectY, 0xff0000);
+                    intersectX = screen.XScreen(isect.hitPoint.X, scale, x_offset);
+                    intersectY = screen.YScreen(isect.hitPoint.Z, scale, y_offset);
+                    Vector3 origin = isect.hitPoint;
+                    Vector3 normal = isect.prim.GetNormal(isect.hitPoint);
+                    Vector3 direction2 = direction - 2 * Vector3.Dot(direction, normal) * normal;
+                    int x2 = screen.XScreen(origin.X + direction2.X * 10, scale, x_offset);
+                    int y2 = screen.YScreen(origin.Z + direction2.Z * 10, scale, y_offset);
+                    screen.Line(intersectX, intersectY, x2, y2, 0x00ffff);
                 }
+
+                screen.Line(screenCamX, screenCamY, intersectX, intersectY, 0xff0000);
             }
-            // draw camera triangle
+
             camera.DrawDebug(screen, scale, x_offset, y_offset);
-            // draw lights as yellow circles
+
             foreach (Light l in scene.lights)
             {
                 int xl = screen.XScreen(l.position.X, scale, x_offset);
                 int yl = screen.YScreen(l.position.Z, scale, y_offset);
                 screen.Circle(xl, yl, 5, 0xffff00);
             }
-            // draw primitives as whatever they want to draw
+
             foreach (Primitive p in scene.primitives)
             {
                 p.DrawDebug(screen, scale, x_offset, y_offset);

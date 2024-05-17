@@ -5,9 +5,9 @@ namespace Objects
 {
     public class Material
     {
-        public Color4 diffuseColor;
-        public Color4 glossyColor;
-        public Color4 ambientColor;
+        public Vector4 diffuseColor;
+        public Vector4 glossyColor;
+        public Vector4 ambientColor;
         public float diffuse;
         public float specular;
 
@@ -15,75 +15,65 @@ namespace Objects
         {
             this.diffuse = diffuse;
             specular = 0.0f;
-            glossyColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
-            diffuseColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
-            ambientColor = new Color4(0.0f, 0.0f, 0.0f, 1.0f);
+            glossyColor = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+            diffuseColor = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+            ambientColor = diffuseColor * 0.1f * diffuse;
         }
     }
     public abstract class Primitive
     {
         public Vector3 position;
-        public Material material;
-
-        public Primitive()
-        {
-            material = new Material(1.0f);
-        }
+        public Material material = new Material(1.0f);
         public abstract Intersection? Intersect(Vector3 origin, Vector3 direction);
         public abstract void DrawDebug(Surface screen, float scale, float x_offset, float y_offset);
 
-        public static int MixColor(float r, float g, float b)
+        public static int MixColor(Vector4 color)
         {
-            int red = (int)(r * 255);
-            int green = (int)(g * 255);
-            int blue = (int)(b * 255);
+            int red = (int)(color.X * 255);
+            int green = (int)(color.Y * 255);
+            int blue = (int)(color.Z * 255);
             return (red << 16) + (green << 8) + blue;
         }
-
-        public void SetColor(float r, float g, float b)
-        {
-            material.diffuseColor = new Color4(r, g, b, 1);
-        }
-
         public abstract Vector3 GetNormal(Vector3 hitPoint);
 
         public virtual Color4 Shade(Vector3 hitPoint, Vector3 viewDir, List<Light> lights, Scene scene, int depth)
         {
             Vector3 normal = GetNormal(hitPoint);
-            Vector4 finalColor = new Vector4(0, 0, 0, 1);
+            Vector4 finalColor = Vector4.Zero;
 
             foreach (Light light in lights)
             {
-                Vector3 shadowRay = (light.position - hitPoint).Normalized();
-                // distance to lightsource
-                float distance = (light.position - hitPoint).Length;
-                float diffuse = Math.Max(Vector3.Dot(normal, shadowRay), 0);
-                float glossy = 1.0f;
-                // if the shadowRay intersects with any object, then the point is in shadow
-                if (scene.IsInShadow(hitPoint, shadowRay, 0.0001f, distance))
-                {
-                    diffuse = 0;
-                    glossy = 0;
-                }
-                Vector4 diffusecolor = (Vector4)material.diffuseColor * diffuse;
+            Vector3 shadowRay = (light.position - hitPoint).Normalized();
+            float distance = (light.position - hitPoint).Length;
+            float diffuse = Math.Max(Vector3.Dot(normal, shadowRay), 0);
+            float glossy = 1.0f;
 
-                // reflection
-                Vector3 reflection = shadowRay - 2 * Vector3.Dot(shadowRay, normal) * normal;
-                float n = 250;
-                Vector4 glossyColor = (float)Math.Pow(Math.Max(Vector3.Dot(reflection, viewDir), 0), n) * (Vector4)material.glossyColor * glossy;
-                if (material.specular != 0)
-                {
-                    Vector3 specularDir = (viewDir - 2 * Vector3.Dot(viewDir, normal) * normal).Normalized();
-                    Intersection intersection = scene.Intersect(hitPoint, specularDir);
-                    if (intersection != null && depth < 5)
-                    {
-                        var prim = intersection.prim;
-                        finalColor += (Vector4)prim.Shade(intersection.hitPoint, specularDir, lights, scene, depth + 1) * material.specular * 1/(distance * distance);
-                    }
-                }
-
-                finalColor += (Vector4)light.color * 1/(distance * distance) * (diffusecolor + glossyColor) + (Vector4)material.ambientColor;
+            if (scene.IsInShadow(hitPoint, shadowRay, 0.0001f, distance))
+            {
+                diffuse = 0;
+                glossy = 0;
             }
+
+            Vector4 diffuseColor = material.diffuseColor * diffuse;
+
+            Vector3 reflection = shadowRay - 2 * Vector3.Dot(shadowRay, normal) * normal;
+            float n = 250;
+            Vector4 glossyColor = (float)Math.Pow(Math.Max(Vector3.Dot(reflection, viewDir), 0), n) * material.glossyColor * glossy;
+
+            if (material.specular != 0)
+            {
+                Vector3 specularDir = (viewDir - 2 * Vector3.Dot(viewDir, normal) * normal).Normalized();
+                Intersection? intersection = scene.Intersect(hitPoint, specularDir);
+                if (intersection != null && depth < 5)
+                {
+                Primitive prim = intersection.prim;
+                finalColor += (Vector4)prim.Shade(intersection.hitPoint, specularDir, lights, scene, depth + 1) * material.specular * 1 / (distance * distance);
+                }
+            }
+
+            finalColor += light.color * 1 / (distance * distance) * (diffuseColor + glossyColor) + material.ambientColor;
+            }
+
             finalColor = Vector4.Clamp(finalColor, Vector4.Zero, Vector4.One);
             return (Color4)finalColor;
         }
@@ -128,7 +118,7 @@ namespace Objects
             int x = screen.XScreen(position.X, scale, x_offset);
             int y = screen.YScreen(position.Z, scale, y_offset);
             int r = (int)(radius * screen.width / scale);
-            screen.Circle(x, y, r, MixColor(material.diffuseColor.R, material.diffuseColor.G, material.diffuseColor.B));
+            screen.Circle(x, y, r, MixColor(material.diffuseColor));
         }
     }
 
@@ -176,12 +166,12 @@ namespace Objects
     public class Light
     {
         public Vector3 position;
-        public Color4 color;
+        public Vector4 color;
 
         public Light(float x, float y, float z)
         {
             position = new Vector3(x, y, z);
-            color = new Color4(2.0f, 2.0f, 2.0f, 1.0f);
+            color = new Vector4(2.0f, 2.0f, 2.0f, 1.0f);
         }
     }
 
