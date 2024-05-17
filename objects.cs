@@ -36,7 +36,7 @@ namespace Objects
         }
         public abstract Vector3 GetNormal(Vector3 hitPoint);
 
-        public virtual Color4 Shade(Vector3 hitPoint, Vector3 viewDir, List<Light> lights, Scene scene, int depth)
+        public Color4 Shade(Vector3 hitPoint, Vector3 viewDir, List<Light> lights, Scene scene, int depth)
         {
             Vector3 normal = GetNormal(hitPoint);
             Vector4 finalColor = Vector4.Zero;
@@ -172,6 +172,12 @@ namespace Objects
         {
             position = new Vector3(x, y, z);
             color = new Vector4(2.0f, 2.0f, 2.0f, 1.0f);
+        }
+        public void DrawDebug(Surface screen, float scale, float x_offset, float y_offset)
+        {
+            int x = screen.XScreen(position.X, scale, x_offset);
+            int y = screen.YScreen(position.Z, scale, y_offset);
+            screen.Circle(x, y, 5, 0xffffff);
         }
     }
 

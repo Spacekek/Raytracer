@@ -1,6 +1,7 @@
 using OpenTK.Mathematics;
 using Objects;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using System.Drawing;
 
 namespace Template
 {
@@ -244,59 +245,28 @@ namespace Template
             int w = screen.width;
             int h = screen.height;
             int[] pixels = screen.pixels;
-            int raysPerPixel = 1;
             // pixels can be calculated in parallel
             Parallel.For(0, h, y =>
             {
                 Parallel.For(0, w, x =>
                 {
-                    Color4[] colors = CalculateColors(x, y, raysPerPixel);
-                    Color4 blendedColor = BlendColors(colors);
-                    pixels[y * w + x] = Primitive.MixColor((Vector4)blendedColor);
+                    Vector3 origin = camera.position;
+                    Vector3 direction = GetRayDirection(x, y, w, h);
+
+                    Intersection? isect = scene.Intersect(origin, direction);
+                    if (isect != null)
+                    {
+                        Primitive prim = isect.prim;
+                        Color4 color = prim.Shade(isect.hitPoint, direction, scene.lights, scene, 0);
+                        pixels[y * w + x] = Primitive.MixColor((Vector4)color);
+                    }
+                    else
+                        pixels[y * w + x] = 0;
                 });
             });
         }
 
-        private Color4[] CalculateColors(int x, int y, int raysPerPixel)
-        {
-            int w = screen.width;
-            int h = screen.height;
-            Color4[] colors = new Color4[raysPerPixel];
-            for (int ray = 0; ray < raysPerPixel; ray++)
-            {
-                Vector3 origin = camera.position;
-                Vector3 direction = GetCameraDirection(x, y, w, h);
-
-                // // optional code for simple anti-aliasing, works by blurring the image
-                // // add a small random offset to the direction to create multiple rays per pixel
-                // Random rand = new Random();
-                // direction += new Vector3((float)rand.NextDouble() * 0.0025f, (float)rand.NextDouble() * 0.0025f, (float)rand.NextDouble() * 0.0025f);
-                Intersection? isect = scene.Intersect(origin, direction);
-                if (isect != null)
-                {
-                    Primitive prim = isect.prim;
-                    colors[ray] = prim.Shade(isect.hitPoint, direction, scene.lights, scene, 0);
-                    continue;
-                }
-                colors[ray] = new Color4(0, 0, 0, 1);
-                break;
-            }
-            return colors;
-        }
-
-        private Color4 BlendColors(Color4[] colors)
-        {
-            float r = 0, g = 0, b = 0;
-            for (int i = 0; i < colors.Length; i++)
-            {
-            r += colors[i].R;
-            g += colors[i].G;
-            b += colors[i].B;
-            }
-            return new Color4(r / colors.Length, g / colors.Length, b / colors.Length, 1);
-        }
-
-        private Vector3 GetCameraDirection(int x, int y, int w, int h)
+        private Vector3 GetRayDirection(int x, int y, int w, int h)
         {
             // Calculate the aspect ratio of the screen
             float aspectRatio = w / (float)h;
@@ -329,10 +299,9 @@ namespace Template
 
             for (int x = 0; x < screen.width; x += 10)
             {
-                Vector3 direction = GetCameraDirection(x, 320, screen.width, screen.height);
+                Vector3 direction = GetRayDirection(x, 320, screen.width, screen.height);
                 int intersectX = screen.XScreen(camera.position.X + direction.X * 100, scale, x_offset);
                 int intersectY = screen.YScreen(camera.position.Z + direction.Z * 100, scale, y_offset);
-                direction.Normalize();
                 Intersection? isect = scene.Intersect(camera.position, direction);
 
                 if (isect != null)
@@ -346,23 +315,15 @@ namespace Template
                     int y2 = screen.YScreen(origin.Z + direction2.Z * 10, scale, y_offset);
                     screen.Line(intersectX, intersectY, x2, y2, 0x00ffff);
                 }
-
                 screen.Line(screenCamX, screenCamY, intersectX, intersectY, 0xff0000);
             }
 
             camera.DrawDebug(screen, scale, x_offset, y_offset);
 
             foreach (Light l in scene.lights)
-            {
-                int xl = screen.XScreen(l.position.X, scale, x_offset);
-                int yl = screen.YScreen(l.position.Z, scale, y_offset);
-                screen.Circle(xl, yl, 5, 0xffff00);
-            }
-
+                l.DrawDebug(screen, scale, x_offset, y_offset);
             foreach (Primitive p in scene.primitives)
-            {
                 p.DrawDebug(screen, scale, x_offset, y_offset);
-            }
         }
     }
 }
