@@ -14,7 +14,7 @@ namespace Objects
         public Material(float diffuse)
         {
             this.diffuse = diffuse;
-            this.specular = 0.0f;
+            specular = 0.0f;
             glossyColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
             diffuseColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
             ambientColor = new Color4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -29,16 +29,8 @@ namespace Objects
         {
             material = new Material(1.0f);
         }
-
-        public abstract Intersection Intersect(Vector3 origin, Vector3 direction);
-        public abstract Vector3 Bounce(Vector3 direction, Vector3 hitPoint);
-
-        public virtual void DrawDebug(Surface screen, float scale, float x_offset, float y_offset)
-        {
-            // int x = screen.XScreen(position.X, scale, x_offset);
-            // int y = screen.YScreen(position.Z, scale, y_offset);
-            // screen.Box(x - 2, y - 2, x + 2, y + 2, MixColor(color.R, color.G, color.B));
-        }
+        public abstract Intersection? Intersect(Vector3 origin, Vector3 direction);
+        public abstract void DrawDebug(Surface screen, float scale, float x_offset, float y_offset);
 
         public static int MixColor(float r, float g, float b)
         {
@@ -66,32 +58,33 @@ namespace Objects
                 // distance to lightsource
                 float distance = (light.position - hitPoint).Length;
                 float diffuse = Math.Max(Vector3.Dot(normal, shadowRay), 0);
+                float glossy = 1.0f;
                 // if the shadowRay intersects with any object, then the point is in shadow
-                if (scene.IsInShadow(hitPoint, shadowRay, 0.0001f))
+                if (scene.IsInShadow(hitPoint, shadowRay, 0.0001f, distance))
                 {
                     diffuse = 0;
+                    glossy = 0;
                 }
                 Vector4 diffusecolor = (Vector4)material.diffuseColor * diffuse;
 
                 // reflection
                 Vector3 reflection = shadowRay - 2 * Vector3.Dot(shadowRay, normal) * normal;
                 float n = 250;
-                Vector4 glossyColor = (float)Math.Pow(Math.Max(Vector3.Dot(reflection, viewDir), 0), n) * (Vector4)material.glossyColor;
-                Vector3 specularDir = (viewDir - 2 * Vector3.Dot(viewDir, normal) * normal).Normalized();
-                Intersection intersection = scene.Intersect(hitPoint, specularDir);
-                
-                if (intersection != null && depth < 5)
+                Vector4 glossyColor = (float)Math.Pow(Math.Max(Vector3.Dot(reflection, viewDir), 0), n) * (Vector4)material.glossyColor * glossy;
+                if (material.specular != 0)
                 {
-                    var prim = intersection.prim;
-                    finalColor += (Vector4)prim.Shade(intersection.hitPoint, specularDir, lights, scene, depth + 1) * material.specular;
+                    Vector3 specularDir = (viewDir - 2 * Vector3.Dot(viewDir, normal) * normal).Normalized();
+                    Intersection intersection = scene.Intersect(hitPoint, specularDir);
+                    if (intersection != null && depth < 5)
+                    {
+                        var prim = intersection.prim;
+                        finalColor += (Vector4)prim.Shade(intersection.hitPoint, specularDir, lights, scene, depth + 1) * material.specular * 1/(distance * distance);
+                    }
                 }
 
-                finalColor += (Vector4)light.color * 1/(distance * distance) * (diffusecolor + glossyColor) + (Vector4)material.ambientColor * 0.3f;
+                finalColor += (Vector4)light.color * 1/(distance * distance) * (diffusecolor + glossyColor) + (Vector4)material.ambientColor;
             }
-            // max 1.0
-            finalColor.X = Math.Min(finalColor.X, 1);
-            finalColor.Y = Math.Min(finalColor.Y, 1);
-            finalColor.Z = Math.Min(finalColor.Z, 1);
+            finalColor = Vector4.Clamp(finalColor, Vector4.Zero, Vector4.One);
             return (Color4)finalColor;
         }
     }
@@ -106,7 +99,7 @@ namespace Objects
             this.radius = radius;
         }
 
-        public override Intersection Intersect(Vector3 origin, Vector3 direction)
+        public override Intersection? Intersect(Vector3 origin, Vector3 direction)
         {
             // ray-sphere intersection
             float a = Vector3.Dot(direction, direction);
@@ -123,11 +116,6 @@ namespace Objects
             Vector3 hitPoint = new Vector3(origin + direction * distance);
 
             return new Intersection(this, distance, hitPoint);
-        }
-
-        public override Vector3 Bounce(Vector3 direction, Vector3 hitPoint)
-        {
-            return GetNormal(hitPoint);
         }
 
         public override Vector3 GetNormal(Vector3 hitPoint)
@@ -156,25 +144,20 @@ namespace Objects
             position = new Vector3(d / normal.X, d / normal.Y, d / normal.Z);
         }
 
-        public override Intersection Intersect(Vector3 origin, Vector3 direction)
+        public override Intersection? Intersect(Vector3 origin, Vector3 direction)
         {
-            // ray-plane intersection
-            float denominator = Vector3.Dot(-normal, direction);
-            if (denominator > 0.0001f)
-            {
-                float t = (d - Vector3.Dot(-normal, origin)) / denominator;
-                if (t >= 0)
-                {
-                    Vector3 hitPoint = new Vector3(origin + direction * t);
-                    return new Intersection(this, t, hitPoint);
-                }
-            }
-            return null;
-        }
+            float denom = Vector3.Dot(normal, direction);
+            if (Math.Abs(denom) <= 0.0001f)
+                return null;
+            
+            float t = (-Vector3.Dot(normal, origin) - d) / denom;
 
-        public override Vector3 Bounce(Vector3 direction, Vector3 hitPoint)
-        {
-            return direction - 2 * Vector3.Dot(direction, normal) * normal;
+            if (t <= 0.0001f)
+                return null;
+
+            Vector3 hitPoint = origin + direction * t;
+
+            return new Intersection(this, t, hitPoint);
         }
 
         public override Vector3 GetNormal(Vector3 hitPoint)

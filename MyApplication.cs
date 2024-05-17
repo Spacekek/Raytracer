@@ -24,38 +24,47 @@ namespace Template
 
         public void Init()
         {
+            Material cyan = new Material(1.0f)
+            {
+            diffuseColor = new Color4(0.75f, 0.95f, 1.0f, 1.0f),
+            ambientColor = new Color4(0.02f, 0.05f, 0.1f, 1.0f)
+            };
+            Material green = new Material(1.0f)
+            {
+            diffuseColor = new Color4(0.8f, 1.0f, 0.8f, 1.0f),
+            ambientColor = new Color4(0.06f, 0.08f, 0.06f, 1.0f)
+            };
+            Material mirror = new Material(0.0f)
+            {
+            specular = 1.0f,
+            glossyColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f),
+            ambientColor = new Color4(0.0f, 0.0f, 0.0f, 1.0f),
+            diffuseColor = new Color4(0.0f, 0.0f, 0.0f, 1.0f)
+            };
+            Material orange = new Material(1.0f)
+            {
+            diffuseColor = new Color4(1.0f, 0.85f, 0.7f, 1.0f),
+            ambientColor = new Color4(0.07f, 0.05f, 0.05f, 1.0f),
+            specular = 0.5f
+            };
+            Material pink = new Material(1.0f)
+            {
+            diffuseColor = new Color4(1.0f, 0.8f, 0.95f, 1.0f),
+            ambientColor = new Color4(0.07f, 0.05f, 0.05f, 1.0f),
+            };
+
             // add scene objects and lights
-            Sphere sphere = new Sphere(0.0f, 0.0f, 2f, 0.5f);
-            Material material = new Material(1.0f);
-            material.ambientColor = new Color4(0.2f, 0.2f, 0.2f, 1.0f);
-            sphere.material = material;
-            sphere.SetColor(0.0f, 0.8f, 1.0f);
-
-            scene.Add(sphere);
-
-            Sphere sphere2 = new Sphere(0.5f, 0.6f, 2.2f, 0.3f);
-            Material material1 = new Material(1.0f);
-            material1.ambientColor = new Color4(0.6f, 0.6f, 0.6f, 1.0f);
-            sphere2.SetColor(1.0f, 0.0f, 0.0f);
-            scene.Add(sphere2);
-
-            Plane plane = new Plane(0.0f, -1.0f, -1f, 3.5f);
-            Material material2 = new Material(1.0f);
-            material2.ambientColor = new Color4(0.2f, 0.6f, 0.2f, 1.0f);
-            plane.material = material2;
-            plane.SetColor(0.0f, 1.0f, 0.0f);
-            scene.Add(plane);
-
-            // ground plane
-            Plane plane2 = new Plane(0.0f, -1.0f, 0.0f, 1.0f);
-            Material material3 = new Material(1.0f);
-            material3.ambientColor = new Color4(0.5f, 0.5f, 0.5f, 1.0f);
-            material3.specular = 1.0f;
-            plane2.material = material3;
-            plane2.SetColor(1.0f, 1.0f, 1.0f);
-            scene.Add(plane2);
+            scene.Add(new Sphere(0.0f, 0.0f, 2f, 0.5f) { material = mirror });
+            scene.Add(new Sphere(0.5f, 0.6f, 2.2f, 0.3f) { material = green });
+            scene.Add(new Plane(0.0f, 0.0f, -1.0f, 3.5f) { material = cyan });
+            scene.Add(new Plane(0.0f, 0.0f, 1.0f, 2.0f) { material = cyan });
+            scene.Add(new Plane(0.0f, -1.0f, 0.0f, 1.0f) { material = orange });
+            scene.Add(new Plane(0.0f, 1.0f, 0.0f, 4.0f) { material = orange });
+            scene.Add(new Plane(1.0f, 0.0f, 0.0f, 4.0f) { material = green });
+            scene.Add(new Plane(-1.0f, 0.0f, 0.0f, 4.0f) { material = pink });
 
             scene.Add(new Light(1.0f, -1.0f, 1.5f));
+            scene.Add(new Light(-1.0f, -1.0f, 0.5f));
         }
 
         public void Tick()
@@ -228,13 +237,13 @@ namespace Template
             return isect;
         }
         
-        public bool IsInShadow(Vector3 origin, Vector3 direction, float epsilon)
+        public bool IsInShadow(Vector3 origin, Vector3 direction, float epsilon, float distance)
         {
             // check if a point is in shadow by casting a ray from the point to the light source
             foreach (Primitive p in primitives)
             {
                 Intersection isect = p.Intersect(origin, direction);
-                if (isect != null && isect.distance > epsilon)
+                if (isect != null && isect.distance > epsilon && isect.distance < distance)
                 {
                     return true;
                 }
@@ -267,49 +276,42 @@ namespace Template
             int w = screen.width;
             int h = screen.height;
             int[] pixels = screen.pixels;
-            int bounces = 0;
             int raysPerPixel = 1;
             // pixels can be calculated in parallel
             Parallel.For(0, h, y =>
             {
                 Parallel.For(0, w, x =>
                 {
-                    Color4[] colors = CalculateColors(x, y, bounces, raysPerPixel);
+                    Color4[] colors = CalculateColors(x, y, raysPerPixel);
                     Color4 blendedColor = BlendColors(colors);
                     pixels[y * w + x] = GetPixelColor(blendedColor);
                 });
             });
         }
 
-        private Color4[] CalculateColors(int x, int y, int bounces, int raysPerPixel)
+        private Color4[] CalculateColors(int x, int y, int raysPerPixel)
         {
             int w = screen.width;
             int h = screen.height;
-            Color4[] colors = new Color4[(bounces + 1) * raysPerPixel];
+            Color4[] colors = new Color4[raysPerPixel];
             for (int ray = 0; ray < raysPerPixel; ray++)
             {
-                Vector3 origin = GetCameraOrigin();
+                Vector3 origin = camera.position;
                 Vector3 direction = GetCameraDirection(x, y, w, h);
 
                 // // optional code for simple anti-aliasing, works by blurring the image
                 // // add a small random offset to the direction to create multiple rays per pixel
                 // Random rand = new Random();
                 // direction += new Vector3((float)rand.NextDouble() * 0.0025f, (float)rand.NextDouble() * 0.0025f, (float)rand.NextDouble() * 0.0025f);
-
-                for (int i = 0; i < bounces + 1; i++)
+                Intersection isect = scene.Intersect(origin, direction);
+                if (isect != null)
                 {
-                    Intersection isect = scene.Intersect(origin, direction);
-                    if (isect != null)
-                    {
-                        Primitive prim = isect.prim;
-                        colors[i * raysPerPixel + ray] = prim.Shade(isect.hitPoint, direction, scene.lights, scene, 0);
-                        origin = isect.hitPoint;
-                        // direction = prim.Bounce(direction, isect.hitPoint);
-                        continue;
-                    }
-                    colors[i] = new Color4(0, 0, 0, 1);
-                    break;
+                    Primitive prim = isect.prim;
+                    colors[ray] = prim.Shade(isect.hitPoint, direction, scene.lights, scene, 0);
+                    continue;
                 }
+                colors[ray] = new Color4(0, 0, 0, 1);
+                break;
             }
             return colors;
         }
@@ -331,11 +333,6 @@ namespace Template
             return Primitive.MixColor(color.R, color.G, color.B);
         }
 
-        private Vector3 GetCameraOrigin()
-        {
-            return new Vector3(camera.position.X, camera.position.Y, camera.position.Z);
-        }
-
         private Vector3 GetCameraDirection(int x, int y, int w, int h)
         {
             // Calculate the aspect ratio of the screen
@@ -346,8 +343,8 @@ namespace Template
             float angleV = MathHelper.DegreesToRadians(camera.fov);
 
             // Calculate the relative screen position from -1 to 1
-            float screenX = (x / (float)w) * 2 - 1; // normalize x to range -1 to 1
-            float screenY = (y / (float)h) * 2 - 1; // normalize y to range -1 to 1
+            float screenX = x / (float)w * 2 - 1; // normalize x to range -1 to 1
+            float screenY = y / (float)h * 2 - 1; // normalize y to range -1 to 1
 
             // Adjust screen positions based on the aspect ratio
             screenX *= (float)Math.Tan(angleH / 2);
@@ -371,11 +368,10 @@ namespace Template
                 // draw rays from camera to first intersection point
                 if (x % 10 == 0)
                 {
-                    float dx = camera.corners[0].X + (camera.corners[1].X - camera.corners[0].X) * x / screen.width;
-                    float dz = camera.corners[0].Z + (camera.corners[1].Z - camera.corners[0].Z) * x / screen.width;
-                    int intersectX = screen.XScreen(dx * 20, scale, x_offset);
-                    int intersectY = screen.YScreen(dz * 20, scale, y_offset);
-                    Vector3 direction = new Vector3(dx, 0, dz);
+                    Vector3 direction = GetCameraDirection(x, 320, screen.width, screen.height);
+                    // in the case of no intersection, draw the ray to the edge of the screen
+                    int intersectX = screen.XScreen(camera.position.X + direction.X * 100, scale, x_offset);
+                    int intersectY = screen.YScreen(camera.position.Z + direction.Z * 100, scale, y_offset);
                     direction.Normalize();
                     Intersection isect = scene.Intersect(camera.position, direction);
                     if (isect != null)
@@ -384,7 +380,8 @@ namespace Template
                         intersectY = screen.YScreen(isect.hitPoint.Z, scale, y_offset);
                         // draw rays from hitpoint to next intersection point
                         Vector3 origin = isect.hitPoint;
-                        Vector3 direction2 = isect.prim.Bounce(direction, isect.hitPoint);
+                        Vector3 normal = isect.prim.GetNormal(isect.hitPoint);
+                        Vector3 direction2 = direction - 2 * Vector3.Dot(direction, normal) * normal;
                         // line in direction of bounce
                         int x2 = screen.XScreen(origin.X + direction2.X * 10, scale, x_offset);
                         int y2 = screen.YScreen(origin.Z + direction2.Z * 10, scale, y_offset);
