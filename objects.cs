@@ -163,6 +163,43 @@ namespace Objects
             screen.Line(x, y - 10, x, y + 10, 0xff0000);
         }
     }
+    public class Triangle : Primitive
+    {
+        private Vector3 v0, v1, v2;
+        private Vector3 normal;
+
+        public Triangle(Vector3 v0, Vector3 v1, Vector3 v2)
+        {
+            this.v0 = v0;
+            this.v1 = v1;
+            this.v2 = v2;
+            normal = Vector3.Cross(v1 - v0, v2 - v0).Normalized();
+        }
+
+        public override Intersection? Intersect(Vector3 origin, Vector3 direction)
+        {
+            // TODO : Implement ray-triangle intersection
+            return null;
+        }
+
+        public override Vector3 GetNormal(Vector3 hitPoint)
+        {
+            return normal;
+        }
+
+        public override void DrawDebug(Surface screen, float scale, float x_offset, float y_offset)
+        {
+            int x0 = screen.XScreen(v0.X, scale, x_offset);
+            int y0 = screen.YScreen(v0.Z, scale, y_offset);
+            int x1 = screen.XScreen(v1.X, scale, x_offset);
+            int y1 = screen.YScreen(v1.Z, scale, y_offset);
+            int x2 = screen.XScreen(v2.X, scale, x_offset);
+            int y2 = screen.YScreen(v2.Z, scale, y_offset);
+            screen.Line(x0, y0, x1, y1, 0xff0000);
+            screen.Line(x1, y1, x2, y2, 0xff0000);
+            screen.Line(x2, y2, x0, y0, 0xff0000);
+        }
+    }
     public class Light
     {
         public Vector3 position;

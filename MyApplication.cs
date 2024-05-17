@@ -1,7 +1,6 @@
 using OpenTK.Mathematics;
 using Objects;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using System.Drawing;
 
 namespace Template
 {
@@ -57,6 +56,9 @@ namespace Template
             // add scene objects and lights
             scene.Add(new Sphere(0.0f, 0.0f, 2f, 0.5f) { material = mirror });
             scene.Add(new Sphere(0.5f, 0.6f, 2.2f, 0.3f) { material = green });
+
+            // scene.Add(new Triangle(new Vector3(-2.0f, 0.0f, 1.0f), new Vector3(-1.5f, 0.0f, 2.0f), new Vector3(-2.0f, -1.5f, 2.0f)) { material = cyan });
+
             scene.Add(new Plane(0.0f, 0.0f, -1.0f, 3.5f) { material = cyan });
             scene.Add(new Plane(0.0f, 0.0f, 1.0f, 2.0f) { material = cyan });
             scene.Add(new Plane(0.0f, -1.0f, 0.0f, 1.0f) { material = orange });
