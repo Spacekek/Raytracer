@@ -80,19 +80,37 @@ namespace Template
             }
             if (state.IsKeyDown(Keys.W))
             {
-                camera.position.Z += 0.1f;
+                camera.position += camera.direction * 0.1f; // Move forward
             }
             if (state.IsKeyDown(Keys.S))
             {
-                camera.position.Z -= 0.1f;
+                camera.position -= camera.direction * 0.1f; // Move backward
             }
             if (state.IsKeyDown(Keys.A))
             {
-                camera.position.X -= 0.1f;
+                Vector3 left = Vector3.Cross(camera.up, camera.direction).Normalized();
+                camera.position -= left * 0.1f; // Move left
             }
             if (state.IsKeyDown(Keys.D))
             {
-                camera.position.X += 0.1f;
+                Vector3 right = Vector3.Cross(camera.up, camera.direction).Normalized();
+                camera.position += right * 0.1f; // Move right
+            }
+            if (state.IsKeyDown(Keys.Left))
+            {
+                camera.RotateYaw(-1.0f); // Rotate left
+            }
+            if (state.IsKeyDown(Keys.Right))
+            {
+                camera.RotateYaw(1.0f); // Rotate right
+            }
+            if (state.IsKeyDown(Keys.Up))
+            {
+                camera.RotatePitch(1.0f); // Look up
+            }
+            if (state.IsKeyDown(Keys.Down))
+            {
+                camera.RotatePitch(-1.0f); // Look down
             }
         }
     }
@@ -101,8 +119,8 @@ namespace Template
     {
         public Vector3 position;
         public Vector3 direction;
-        private Vector3 up;
-        private float fov;
+        public Vector3 up;
+        public float fov;
         public Vector3[] corners;
 
         public Camera(float aspect)
@@ -112,26 +130,61 @@ namespace Template
             up = new Vector3(0, 1, 0);
             fov = 90;
             corners = new Vector3[4];
-            // distance of camera plane is dependent on field of view
+            CalculateCorners(aspect);
+        }
+
+        private void CalculateCorners(float aspect)
+        {
             float d = 1 / (float)Math.Tan(fov * Math.PI / 180 / 2);
-            corners[0] = new Vector3(-aspect / 5, -0.2f, d / 5);
-            corners[1] = new Vector3(aspect / 5, -0.2f, d / 5);
-            corners[2] = new Vector3(aspect / 5, 0.2f, d / 5);
-            corners[3] = new Vector3(-aspect / 5, 0.2f, d / 5);
+            Vector3 right = Vector3.Cross(up, direction).Normalized();
+            Vector3 upAdjusted = Vector3.Cross(direction, right);
+            float height = d * (float)Math.Tan(fov * Math.PI / 360);
+            float width = height * aspect;
+            corners = new Vector3[4];
+            corners[0] = position + direction * d - right * width - upAdjusted * height;
+            corners[1] = position + direction * d + right * width - upAdjusted * height;
+            corners[2] = position + direction * d + right * width + upAdjusted * height;
+            corners[3] = position + direction * d - right * width + upAdjusted * height;
         }
 
         public void DrawDebug(Surface screen, float scale, float x_offset, float y_offset)
         {
-            // draw lines between camera corners to form a triangle
+            // Recalculate corners before drawing
+            CalculateCorners(screen.width / (float)screen.height);
+
+            // Draw lines between camera and corners
             int x0 = screen.XScreen(position.X, scale, x_offset);
             int y0 = screen.YScreen(position.Z, scale, y_offset);
-            int x1 = screen.XScreen(corners[0].X, scale, x_offset);
-            int y1 = screen.YScreen(corners[0].Z, scale, y_offset);
-            int x2 = screen.XScreen(corners[1].X, scale, x_offset);
-            int y2 = screen.YScreen(corners[1].Z, scale, y_offset);
-            screen.Line(x0, y0, x1, y1, 0x00ff00);
-            screen.Line(x0, y0, x2, y2, 0x00ff00);
-            screen.Line(x1, y1, x2, y2, 0xffaa00);
+
+            for (int i = 0; i < corners.Length; i++)
+            {
+                int x1 = screen.XScreen(corners[i].X, scale, x_offset);
+                int y1 = screen.YScreen(corners[i].Z, scale, y_offset);
+                screen.Line(x0, y0, x1, y1, 0x00ff00);
+                if (i < corners.Length - 1)
+                {
+                    int x2 = screen.XScreen(corners[i + 1].X, scale, x_offset);
+                    int y2 = screen.YScreen(corners[i + 1].Z, scale, y_offset);
+                    screen.Line(x1, y1, x2, y2, 0xffaa00);
+                }
+            }
+            // Complete the loop
+            screen.Line(screen.XScreen(corners[3].X, scale, x_offset), screen.YScreen(corners[3].Z, scale, y_offset),
+            screen.XScreen(corners[0].X, scale, x_offset), screen.YScreen(corners[0].Z, scale, y_offset), 0xffaa00);
+        }
+
+        public void RotateYaw(float angle)
+        {
+            Quaternion rotation = Quaternion.FromAxisAngle(up, MathHelper.DegreesToRadians(angle));
+            direction = Vector3.Transform(direction, rotation).Normalized();
+        }
+
+        public void RotatePitch(float angle)
+        {
+            Vector3 right = Vector3.Cross(up, direction).Normalized();
+            Quaternion rotation = Quaternion.FromAxisAngle(right, MathHelper.DegreesToRadians(angle));
+            direction = Vector3.Transform(direction, rotation).Normalized();
+            up = Vector3.Transform(up, rotation).Normalized();
         }
     }
 
@@ -285,12 +338,28 @@ namespace Template
 
         private Vector3 GetCameraDirection(int x, int y, int w, int h)
         {
-            float dx = camera.corners[0].X + (camera.corners[1].X - camera.corners[0].X) * x / w;
-            float dz = camera.corners[0].Z + (camera.corners[1].Z - camera.corners[0].Z) * x / w;
-            float dy = camera.corners[0].Y + (camera.corners[3].Y - camera.corners[0].Y) * y / h;
-            Vector3 direction = new Vector3(dx, dy, dz);
-            direction.Normalize();
-            return direction;
+            // Calculate the aspect ratio of the screen
+            float aspectRatio = w / (float)h;
+
+            // Horizontal and vertical angles based on the field of view
+            float angleH = MathHelper.DegreesToRadians(camera.fov * aspectRatio);
+            float angleV = MathHelper.DegreesToRadians(camera.fov);
+
+            // Calculate the relative screen position from -1 to 1
+            float screenX = (x / (float)w) * 2 - 1; // normalize x to range -1 to 1
+            float screenY = (y / (float)h) * 2 - 1; // normalize y to range -1 to 1
+
+            // Adjust screen positions based on the aspect ratio
+            screenX *= (float)Math.Tan(angleH / 2);
+            screenY *= (float)Math.Tan(angleV / 2);
+
+            // Direction vector from the camera to the pixel
+            Vector3 rayDirection = camera.direction +
+                                   camera.up * screenY +
+                                   Vector3.Cross(camera.up, camera.direction).Normalized() * screenX;
+            rayDirection.Normalize();
+            
+            return rayDirection;
         }
 
         public void Debug()
