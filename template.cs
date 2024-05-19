@@ -143,6 +143,18 @@ namespace Template
                 GL.ActiveTexture(TextureUnit.Texture0);
                 GL.BindTexture(TextureTarget.Texture2D, screenID);
                 GL.Uniform1(GL.GetUniformLocation(programID, "pixels"), 0);
+                // connect camera location to the shader uniform variable
+                GL.Uniform3(GL.GetUniformLocation(programID, "cameraPosition"), app.camera.position.X, app.camera.position.Y, app.camera.position.Z);
+                // uniform vec3 cameraDirection;
+                GL.Uniform3(GL.GetUniformLocation(programID, "cameraDirection"), app.camera.direction.X, app.camera.direction.Y, app.camera.direction.Z);
+                // uniform vec3 cameraUp;
+                GL.Uniform3(GL.GetUniformLocation(programID, "cameraUp"), app.camera.up.X, app.camera.up.Y, app.camera.up.Z);
+                // uniform float fov;
+                GL.Uniform1(GL.GetUniformLocation(programID, "fov"), app.camera.fov);
+                // uniform vec3 corners[4];
+                GL.Uniform3(GL.GetUniformLocation(programID, "corners"), app.camera.corners[0].X, app.camera.corners[0].Y, app.camera.corners[0].Z);
+                // uniform float gpu
+                GL.Uniform1(GL.GetUniformLocation(programID, "gpu"), app.gpu);
             }
             app.Init();
         }
@@ -185,6 +197,18 @@ namespace Template
             // convert MyApplication.screen to OpenGL texture
             if (app != null)
             {
+                // update camera position uniform variable
+                GL.Uniform3(GL.GetUniformLocation(programID, "cameraPosition"), app.camera.position.X, app.camera.position.Y, app.camera.position.Z);
+                // uniform vec3 cameraDirection;
+                GL.Uniform3(GL.GetUniformLocation(programID, "cameraDirection"), app.camera.direction.X, app.camera.direction.Y, app.camera.direction.Z);
+                // uniform vec3 cameraUp;
+                GL.Uniform3(GL.GetUniformLocation(programID, "cameraUp"), app.camera.up.X, app.camera.up.Y, app.camera.up.Z);
+                // uniform float fov;
+                GL.Uniform1(GL.GetUniformLocation(programID, "fov"), app.camera.fov);
+                // uniform vec3 corners[4];
+                GL.Uniform3(GL.GetUniformLocation(programID, "corners"), app.camera.corners[0].X, app.camera.corners[0].Y, app.camera.corners[0].Z);
+                // uniform float gpu
+                GL.Uniform1(GL.GetUniformLocation(programID, "gpu"), app.gpu);
                 GL.BindTexture(TextureTarget.Texture2D, screenID);
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba,
                                app.screen.width, app.screen.height, 0,

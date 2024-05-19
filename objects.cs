@@ -43,35 +43,35 @@ namespace Objects
 
             foreach (Light light in lights)
             {
-            Vector3 shadowRay = (light.position - hitPoint).Normalized();
-            float distance = (light.position - hitPoint).Length;
-            float diffuse = Math.Max(Vector3.Dot(normal, shadowRay), 0);
-            float glossy = 1.0f;
+                Vector3 shadowRay = (light.position - hitPoint).Normalized();
+                float distance = (light.position - hitPoint).Length;
+                float diffuse = Math.Max(Vector3.Dot(normal, shadowRay), 0);
+                float glossy = 1.0f;
 
-            if (scene.IsInShadow(hitPoint, shadowRay, 0.0001f, distance))
-            {
-                diffuse = 0;
-                glossy = 0;
-            }
-
-            Vector4 diffuseColor = material.diffuseColor * diffuse;
-
-            Vector3 reflection = shadowRay - 2 * Vector3.Dot(shadowRay, normal) * normal;
-            float n = 250;
-            Vector4 glossyColor = (float)Math.Pow(Math.Max(Vector3.Dot(reflection, viewDir), 0), n) * material.glossyColor * glossy;
-
-            if (material.specular != 0)
-            {
-                Vector3 specularDir = (viewDir - 2 * Vector3.Dot(viewDir, normal) * normal).Normalized();
-                Intersection? intersection = scene.Intersect(hitPoint, specularDir);
-                if (intersection != null && depth < 5)
+                if (scene.IsInShadow(hitPoint, shadowRay, 0.0001f, distance))
                 {
-                Primitive prim = intersection.prim;
-                finalColor += (Vector4)prim.Shade(intersection.hitPoint, specularDir, lights, scene, depth + 1) * material.specular * 1 / (distance * distance);
+                    diffuse = 0;
+                    glossy = 0;
                 }
-            }
 
-            finalColor += light.color * 1 / (distance * distance) * (diffuseColor + glossyColor) + material.ambientColor;
+                Vector4 diffuseColor = material.diffuseColor * diffuse;
+
+                Vector3 reflection = shadowRay - 2 * Vector3.Dot(shadowRay, normal) * normal;
+                float n = 250;
+                Vector4 glossyColor = (float)Math.Pow(Math.Max(Vector3.Dot(reflection, viewDir), 0), n) * material.glossyColor * glossy;
+
+                if (material.specular != 0)
+                {
+                    Vector3 specularDir = (viewDir - 2 * Vector3.Dot(viewDir, normal) * normal).Normalized();
+                    Intersection? intersection = scene.Intersect(hitPoint, specularDir);
+                    if (intersection != null && depth < 5)
+                    {
+                    Primitive prim = intersection.prim;
+                    finalColor += (Vector4)prim.Shade(intersection.hitPoint, specularDir, lights, scene, depth + 1) * material.specular * 1 / (distance * distance);
+                    }
+                }
+
+                finalColor += light.color * 1 / (distance * distance) * (diffuseColor + glossyColor) + material.ambientColor;
             }
 
             finalColor = Vector4.Clamp(finalColor, Vector4.Zero, Vector4.One);

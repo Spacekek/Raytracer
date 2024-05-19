@@ -7,15 +7,17 @@ namespace Template
     class MyApplication
     {
         public Surface screen;
-        private Camera camera;
+        public Camera camera;
         private Scene scene;
         private Raytracer raytracer;
         private bool debug;
+        public float gpu;
 
         public MyApplication(Surface screen)
         {
             // initialize screen, camera, scene and raytracer
             this.screen = screen;
+            gpu = -1.0f;
             camera = new Camera((float)screen.width / screen.height);
             scene = new Scene();
             raytracer = new Raytracer(scene, camera, screen);
@@ -74,15 +76,23 @@ namespace Template
         {
             // every frame, clear the screen, render the scene and draw debug view
             screen.Clear(0);
-            if (debug)
-                raytracer.Debug();
+            if (gpu > 0.0)
+                return;
             else
-                raytracer.Render();
+            {
+                if (debug)
+                    raytracer.Debug();
+                else
+                    raytracer.Render();
+            }
         }
         public void UpdateKeyboard(KeyboardState state)
         {
             // toggle debug view on key press
             debug = state.IsKeyDown(Keys.Space) ? !debug : debug;
+
+            // toggle gpu
+            gpu = state.IsKeyDown(Keys.G) ? gpu * -1 : gpu;
 
             // Move forward/backward
             float moveSpeed = 0.1f;
@@ -95,7 +105,7 @@ namespace Template
             camera.position += state.IsKeyDown(Keys.D) ? left * moveSpeed : Vector3.Zero;
 
             // Rotate left/right
-            float rotateSpeed = 1.0f;
+            float rotateSpeed = 5.0f;
             camera.RotateYaw(state.IsKeyDown(Keys.Left) ? -rotateSpeed : 0.0f);
             camera.RotateYaw(state.IsKeyDown(Keys.Right) ? rotateSpeed : 0.0f);
 
