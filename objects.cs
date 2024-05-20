@@ -81,7 +81,7 @@ namespace Objects
 
     public class Sphere : Primitive
     {
-        private float radius;
+        public float radius;
 
         public Sphere(float x, float y, float z, float radius)
         {
@@ -125,7 +125,7 @@ namespace Objects
     public class Plane : Primitive
     {
         private Vector3 normal;
-        private float d;
+        public float d;
 
         public Plane(float nx, float ny, float nz, float d)
         {

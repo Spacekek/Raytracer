@@ -155,6 +155,27 @@ namespace Template
                 GL.Uniform3(GL.GetUniformLocation(programID, "corners"), app.camera.corners[0].X, app.camera.corners[0].Y, app.camera.corners[0].Z);
                 // uniform float gpu
                 GL.Uniform1(GL.GetUniformLocation(programID, "gpu"), app.gpu);
+                GL.Uniform1(GL.GetUniformLocation(programID, "NUM_LIGHTS"), app.numLights);
+                GL.Uniform1(GL.GetUniformLocation(programID, "NUM_PRIMS"), app.numPrims);
+                GL.Uniform1(GL.GetUniformLocation(programID, "maxDepth"), app.maxDepth);
+                for (int i = 0; i < app.numLights; i++)
+                {
+                    GL.Uniform3(GL.GetUniformLocation(programID, $"lightPositions[{i}]"), app.lightPositions[i].X, app.lightPositions[i].Y, app.lightPositions[i].Z);
+                    GL.Uniform4(GL.GetUniformLocation(programID, $"lightColors[{i}]"), app.lightColors[i].X, app.lightColors[i].Y, app.lightColors[i].Z, app.lightColors[i].W);
+                }
+                for (int i = 0; i < app.numPrims; i++)
+                {
+                    GL.Uniform3(GL.GetUniformLocation(programID, $"primPositions[{i}]"), app.primPositions[i].X, app.primPositions[i].Y, app.primPositions[i].Z);
+                    GL.Uniform3(GL.GetUniformLocation(programID, $"primNormals[{i}]"), app.primNormals[i].X, app.primNormals[i].Y, app.primNormals[i].Z);
+                    GL.Uniform4(GL.GetUniformLocation(programID, $"primDiffuseColors[{i}]"), app.primDiffuseColors[i].X, app.primDiffuseColors[i].Y, app.primDiffuseColors[i].Z, app.primDiffuseColors[i].W);
+                    GL.Uniform4(GL.GetUniformLocation(programID, $"primGlossyColors[{i}]"), app.primGlossyColors[i].X, app.primGlossyColors[i].Y, app.primGlossyColors[i].Z, app.primGlossyColors[i].W);
+                    GL.Uniform4(GL.GetUniformLocation(programID, $"primAmbientColors[{i}]"), app.primAmbientColors[i].X, app.primAmbientColors[i].Y, app.primAmbientColors[i].Z, app.primAmbientColors[i].W);
+                    GL.Uniform1(GL.GetUniformLocation(programID, $"primSpecular[{i}]"), app.primSpecular[i]);
+                    GL.Uniform1(GL.GetUniformLocation(programID, $"primRadius[{i}]"), app.primRadius[i]);
+                    GL.Uniform1(GL.GetUniformLocation(programID, $"primD[{i}]"), app.primD[i]);
+                    GL.Uniform1(GL.GetUniformLocation(programID, $"primTypes[{i}]"), app.primTypes[i]);
+                }
+
             }
             app.Init();
         }
@@ -209,6 +230,27 @@ namespace Template
                 GL.Uniform3(GL.GetUniformLocation(programID, "corners"), app.camera.corners[0].X, app.camera.corners[0].Y, app.camera.corners[0].Z);
                 // uniform float gpu
                 GL.Uniform1(GL.GetUniformLocation(programID, "gpu"), app.gpu);
+                GL.Uniform1(GL.GetUniformLocation(programID, "NUM_LIGHTS"), app.numLights);
+                GL.Uniform1(GL.GetUniformLocation(programID, "NUM_PRIMS"), app.numPrims);
+                GL.Uniform1(GL.GetUniformLocation(programID, "maxDepth"), app.maxDepth);
+                for (int i = 0; i < app.numLights; i++)
+                {
+                    GL.Uniform3(GL.GetUniformLocation(programID, $"lightPositions[{i}]"), app.lightPositions[i].X, app.lightPositions[i].Y, app.lightPositions[i].Z);
+                    GL.Uniform4(GL.GetUniformLocation(programID, $"lightColors[{i}]"), app.lightColors[i].X, app.lightColors[i].Y, app.lightColors[i].Z, app.lightColors[i].W);
+                }
+                for (int i = 0; i < app.numPrims; i++)
+                {
+                    GL.Uniform3(GL.GetUniformLocation(programID, $"primPositions[{i}]"), app.primPositions[i].X, app.primPositions[i].Y, app.primPositions[i].Z);
+                    GL.Uniform3(GL.GetUniformLocation(programID, $"primNormals[{i}]"), app.primNormals[i].X, app.primNormals[i].Y, app.primNormals[i].Z);
+                    GL.Uniform4(GL.GetUniformLocation(programID, $"primDiffuseColors[{i}]"), app.primDiffuseColors[i].X, app.primDiffuseColors[i].Y, app.primDiffuseColors[i].Z, app.primDiffuseColors[i].W);
+                    GL.Uniform4(GL.GetUniformLocation(programID, $"primGlossyColors[{i}]"), app.primGlossyColors[i].X, app.primGlossyColors[i].Y, app.primGlossyColors[i].Z, app.primGlossyColors[i].W);
+                    GL.Uniform4(GL.GetUniformLocation(programID, $"primAmbientColors[{i}]"), app.primAmbientColors[i].X, app.primAmbientColors[i].Y, app.primAmbientColors[i].Z, app.primAmbientColors[i].W);
+                    GL.Uniform1(GL.GetUniformLocation(programID, $"primSpecular[{i}]"), app.primSpecular[i]);
+                    GL.Uniform1(GL.GetUniformLocation(programID, $"primRadius[{i}]"), app.primRadius[i]);
+                    GL.Uniform1(GL.GetUniformLocation(programID, $"primD[{i}]"), app.primD[i]);
+                    GL.Uniform1(GL.GetUniformLocation(programID, $"primTypes[{i}]"), app.primTypes[i]);
+                }
+                
                 GL.BindTexture(TextureTarget.Texture2D, screenID);
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba,
                                app.screen.width, app.screen.height, 0,

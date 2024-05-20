@@ -14,13 +14,40 @@ namespace Template
         public float gpu;
         private DateTime time;
         private DateTime prevtime;
-
+        public int numLights;
+        public int numPrims;
+        public int maxDepth;
+        public Vector3[] lightPositions;
+        public Vector4[] lightColors;
+        public Vector3[] primPositions;
+        public Vector3[] primNormals;
+        public Vector4[] primDiffuseColors;
+        public Vector4[] primGlossyColors;
+        public Vector4[] primAmbientColors;
+        public float[] primSpecular;
+        public float[] primRadius;
+        public float[] primD;
+        public int[] primTypes;
 
         public MyApplication(Surface screen)
         {
             // initialize screen, camera, scene and raytracer
             this.screen = screen;
             gpu = -1.0f;
+            numLights = 0;
+            numPrims = 0;
+            maxDepth = 5;
+            lightPositions = new Vector3[10];
+            lightColors = new Vector4[10];
+            primPositions = new Vector3[10];
+            primNormals = new Vector3[10];
+            primDiffuseColors = new Vector4[10];
+            primGlossyColors = new Vector4[10];
+            primAmbientColors = new Vector4[10];
+            primSpecular = new float[10];
+            primRadius = new float[10];
+            primD = new float[10];
+            primTypes = new int[10];
             camera = new Camera((float)screen.width / screen.height);
             scene = new Scene();
             raytracer = new Raytracer(scene, camera, screen);
@@ -73,6 +100,34 @@ namespace Template
 
             scene.Add(new Light(1.0f, -1.0f, 1.5f));
             scene.Add(new Light(-1.0f, -1.0f, 0.5f));
+
+            foreach(Light l in scene.lights)
+            {
+                lightPositions[numLights] = l.position;
+                lightColors[numLights] = l.color;
+                numLights++;
+            }
+
+            foreach(Primitive p in scene.primitives)
+            {
+                primPositions[numPrims] = p.position;
+                primNormals[numPrims] = p.GetNormal(p.position);
+                primDiffuseColors[numPrims] = p.material.diffuseColor;
+                primGlossyColors[numPrims] = p.material.glossyColor;
+                primAmbientColors[numPrims] = p.material.ambientColor;
+                primSpecular[numPrims] = p.material.specular;
+                if (p is Sphere sphere)
+                {
+                    primRadius[numPrims] = sphere.radius;
+                    primTypes[numPrims] = 0;
+                }
+                else if (p is Plane plane)
+                {
+                    primD[numPrims] = plane.d;
+                    primTypes[numPrims] = 1;
+                }
+                numPrims++;
+            }
         }
 
         public void Tick()
