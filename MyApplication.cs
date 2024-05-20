@@ -12,6 +12,10 @@ namespace Template
         private Raytracer raytracer;
         private bool debug;
         public float gpu;
+        private DateTime time;
+        private KeyboardState prevstate;
+        private DateTime prevtime;
+
 
         public MyApplication(Surface screen)
         {
@@ -76,6 +80,7 @@ namespace Template
         {
             // every frame, clear the screen, render the scene and draw debug view
             screen.Clear(0);
+            time = DateTime.Now;
             if (gpu > 0.0)
                 return;
             else
@@ -88,14 +93,19 @@ namespace Template
         }
         public void UpdateKeyboard(KeyboardState state)
         {
-            // toggle debug view on key press
-            debug = state.IsKeyDown(Keys.Space) ? !debug : debug;
+            if (DateTime.Now.Ticks/10000000 - prevtime.Ticks/10000000 > 0.2)
+            {
+                // toggle debug view on key press
+                debug = state.IsKeyDown(Keys.Space) ? !debug : debug;
 
-            // toggle gpu
-            gpu = state.IsKeyDown(Keys.G) ? gpu * -1 : gpu;
+                // toggle gpu
+                gpu = state.IsKeyDown(Keys.G) ? gpu * -1 : gpu;
 
+                prevtime = DateTime.Now;
+            }
+            float dt = (float)(DateTime.Now.Ticks - time.Ticks)/5000000;
             // Move forward/backward
-            float moveSpeed = 0.1f;
+            float moveSpeed = dt;
             camera.position += state.IsKeyDown(Keys.W) ? camera.direction * moveSpeed : Vector3.Zero;
             camera.position -= state.IsKeyDown(Keys.S) ? camera.direction * moveSpeed : Vector3.Zero;
 
@@ -105,13 +115,14 @@ namespace Template
             camera.position += state.IsKeyDown(Keys.D) ? left * moveSpeed : Vector3.Zero;
 
             // Rotate left/right
-            float rotateSpeed = 5.0f;
+            float rotateSpeed = dt * 80;
             camera.RotateYaw(state.IsKeyDown(Keys.Left) ? -rotateSpeed : 0.0f);
             camera.RotateYaw(state.IsKeyDown(Keys.Right) ? rotateSpeed : 0.0f);
 
             // Look up/down
             camera.RotatePitch(state.IsKeyDown(Keys.Up) ? rotateSpeed : 0.0f);
             camera.RotatePitch(state.IsKeyDown(Keys.Down) ? -rotateSpeed : 0.0f);
+            prevstate = state;
         }
     }
 
