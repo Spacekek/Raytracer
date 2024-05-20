@@ -44,6 +44,7 @@ struct Intersection {
     bool hit;
     Primitive prim;
     vec3 hitPoint;
+    float dist;
 };
 
 vec3 GetRayDirection(int x, int y, int w, int h) {
@@ -80,42 +81,52 @@ Intersection SphereIntersect(vec3 orig, vec3 dir, Primitive prim) {
     // The discriminant < 0 means no intersection, = 0 means one intersection (ray touches the sphere), > 0 means two intersections (ray goes through sphere)
     float discriminant = b * b - 4.0 * a * c;
 
-    if (discriminant < 0.0) return Intersection(false, prim, vec3(0.0));
+    if (discriminant < 0.0) return Intersection(false, prim, vec3(0.0), 0);
     // Calculate the distance to the intersection point
-    float distance = (-b - sqrt(discriminant)) / (2.0 * a);
+    float dist = (-b - sqrt(discriminant)) / (2.0 * a);
     // Calculate the intersection point
-    vec3 hitPoint = orig + dir * distance;
+    vec3 hitPoint = orig + dir * dist;
 
-    return Intersection(true, prim, hitPoint);
+    return Intersection(true, prim, hitPoint, dist);
 }
 
 Intersection PlaneIntersect(vec3 origin, vec3 direction, Primitive prim) {
     float denom = dot(prim.normal, direction);
     if (abs(denom) <= 0.0001)
-        return Intersection(false, prim, vec3(0.0));
+        return Intersection(false, prim, vec3(0.0), 0);
 
     float t = (-dot(prim.normal, origin) - prim.d) / denom;
 
     if (t <= 0.0001)
-        return Intersection(false, prim, vec3(0.0));
+        return Intersection(false, prim, vec3(0.0), 0);
 
     vec3 hitPoint = origin + direction * t;
 
-    return Intersection(true, prim, hitPoint);
+    return Intersection(true, prim, hitPoint, t);
 }
 
-bool IsInShadow(vec3 hitPoint, vec3 shadowRay, Primitive[10] primitives, float epsilon, float dist) {
+bool IsInShadow(vec3 origin, vec3 direction, Primitive[10] primitives, float epsilon, float dist) {
+
+    // check if a point is in shadow by casting a ray from the point to the light source
+    // foreach (Primitive p in primitives)
+    // {
+    //     Intersection? isect = p.Intersect(origin, direction);
+    //     if (isect != null && isect.distance > epsilon && isect.distance < distance)
+    //         return true;
+    // }
+    // return false;
+
     for (int i = 0; i < NUM_PRIM; i++) {
         Primitive prim = primitives[i];
         if (prim.type == 0) { // sphere
-            Intersection intersect = SphereIntersect(hitPoint, shadowRay, prim);
-            if (intersect.hit && length(intersect.hitPoint - hitPoint) < dist && length(intersect.hitPoint - hitPoint) > epsilon) {
+            Intersection intersect = SphereIntersect(origin, direction, prim);
+            if (intersect.hit && intersect.dist > epsilon && intersect.dist < dist) {
                 return true;
             }
         }
         if (prim.type == 1) { // plane
-            Intersection intersect = PlaneIntersect(hitPoint, shadowRay, prim);
-            if (intersect.hit && length(intersect.hitPoint - hitPoint) < dist && length(intersect.hitPoint - hitPoint) > epsilon) {
+            Intersection intersect = PlaneIntersect(origin, direction, prim);
+            if (intersect.hit && intersect.dist > epsilon && intersect.dist < dist) {
                 return true;
             }
         }
@@ -126,7 +137,7 @@ bool IsInShadow(vec3 hitPoint, vec3 shadowRay, Primitive[10] primitives, float e
 Intersection sceneIntersect(vec3 orig, vec3 dir, Primitive[10] primitives, float epsilon) {
     float closest = 1000000.0;
     Primitive closestPrim;
-    Intersection intersection = Intersection(false, closestPrim, vec3(0.0));
+    Intersection intersection = Intersection(false, closestPrim, vec3(0.0), 0);
     for (int i = 0; i < NUM_PRIM; i++) {
         Primitive prim = primitives[i];
         Intersection intersect;
@@ -142,6 +153,57 @@ Intersection sceneIntersect(vec3 orig, vec3 dir, Primitive[10] primitives, float
         }
     }
     return intersection;
+}
+
+vec4 SpecularColor(float specular, int maxDepth, vec3 viewDir, vec3 normal, vec3 hitPoint, Primitive[10] primitives, Light[10] lights, float epsilon)
+{
+    vec4 finalColor = vec4(0.0);
+    int depth = 0;
+    while (depth < maxDepth) {
+        vec3 specularDir = normalize(viewDir - 2.0 * dot(viewDir, normal) * normal);
+        Intersection intersection = sceneIntersect(hitPoint, specularDir, primitives, epsilon);
+        if (!intersection.hit)
+        {
+            break;
+        }
+        Primitive prim = intersection.prim;
+        hitPoint = intersection.hitPoint;
+        viewDir = specularDir;
+        vec3 normal = vec3(0.0);
+        Material material = prim.material;
+        if (prim.type == 0) { // sphere
+            normal = normalize(hitPoint - prim.position);
+        }
+        if (prim.type == 1) { // plane
+            normal = prim.normal;
+        }
+
+        for (int i = 0; i < NUM_LIGHTS; i++) {
+            vec3 shadowRay = normalize(lights[i].position - hitPoint);
+            float dist = length(lights[i].position - hitPoint);
+            float diffuse = max(dot(normal, shadowRay), 0.0);
+            float glossy = 1.0;
+
+            if (IsInShadow(hitPoint, shadowRay, primitives, epsilon, dist)) {
+                diffuse = 0.0;
+                glossy = 0.0;
+            }
+
+            vec4 diffuseColor = material.diffuseColor * diffuse;
+
+            vec3 reflection = shadowRay - 2.0 * dot(shadowRay, normal) * normal;
+            float n = 250.0;
+            vec4 glossyColor = pow(max(dot(reflection, viewDir), 0.0), n) * material.glossyColor * glossy;
+
+            finalColor += material.specular * lights[i].color * 1.0 / (dist * dist) * (diffuseColor + glossyColor) + material.ambientColor;
+        }
+
+        if (material.specular < 0.01) {
+            break;
+        }
+        depth++;
+    }
+    return finalColor * specular;
 }
 
 vec4 Shade(Primitive prim, vec3 hitPoint, vec3 viewDir, Light[10] lights, Primitive[10] primitives, int maxDepth) {
@@ -174,42 +236,13 @@ vec4 Shade(Primitive prim, vec3 hitPoint, vec3 viewDir, Light[10] lights, Primit
         float n = 250.0;
         vec4 glossyColor = pow(max(dot(reflection, viewDir), 0.0), n) * material.glossyColor * glossy;
 
-        finalColor += lights[i].color * 1.0 / (dist * dist) * (diffuseColor + glossyColor) + material.ambientColor;
+        finalColor += lights[i].color * 1.0 / (dist * dist) * (diffuseColor + glossyColor);
 
         if (material.specular != 0.0) {
-            int depth = 0;
-            while (depth < maxDepth) {
-                vec3 specularDir = normalize(viewDir - 2.0 * dot(viewDir, normal) * normal);
-                Intersection intersection = sceneIntersect(hitPoint, specularDir, primitives, epsilon);
-                material = intersection.prim.material;
-                hitPoint = intersection.hitPoint;
-                viewDir = specularDir;
-                shadowRay = normalize(lights[i].position - hitPoint);
-                dist = distance(lights[i].position, hitPoint) + dist;
-                diffuse = max(dot(normal, shadowRay), 0.0);
-                glossy = 1.0;
-
-                if (IsInShadow(hitPoint, shadowRay, primitives, epsilon, dist)) {
-                    diffuse = 0.0;
-                    glossy = 0.0;
-                }
-
-                diffuseColor = material.diffuseColor * diffuse;
-
-                reflection = shadowRay - 2.0 * dot(shadowRay, normal) * normal;
-                n = 250.0;
-                glossyColor = pow(max(dot(reflection, viewDir), 0.0), n) * material.glossyColor * glossy;
-
-                finalColor += material.specular * lights[i].color * (1.0 / (dist * dist)) * (diffuseColor + glossyColor) + material.ambientColor;
-
-                if (material.specular < 0.01) {
-                    break;
-                }
-                depth++;
-            }
+            finalColor += SpecularColor(material.specular, maxDepth, viewDir, normal, hitPoint, primitives, lights, epsilon);
         }
     }
-
+    finalColor += material.ambientColor;
     finalColor = clamp(finalColor, vec4(0.0), vec4(1.0));
     return finalColor;
 }

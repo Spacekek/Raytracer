@@ -13,7 +13,6 @@ namespace Template
         private bool debug;
         public float gpu;
         private DateTime time;
-        private KeyboardState prevstate;
         private DateTime prevtime;
 
 
@@ -122,7 +121,6 @@ namespace Template
             // Look up/down
             camera.RotatePitch(state.IsKeyDown(Keys.Up) ? rotateSpeed : 0.0f);
             camera.RotatePitch(state.IsKeyDown(Keys.Down) ? -rotateSpeed : 0.0f);
-            prevstate = state;
         }
     }
 
