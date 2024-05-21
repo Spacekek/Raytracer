@@ -28,6 +28,9 @@ namespace Template
         public float[] primRadius;
         public float[] primD;
         public int[] primTypes;
+        public Vector3[] v0;
+        public Vector3[] v1;
+        public Vector3[] v2;
 
         public MyApplication(Surface screen)
         {
@@ -48,6 +51,9 @@ namespace Template
             primRadius = new float[10];
             primD = new float[10];
             primTypes = new int[10];
+            v0 = new Vector3[10];
+            v1 = new Vector3[10];
+            v2 = new Vector3[10];
             camera = new Camera((float)screen.width / screen.height);
             scene = new Scene();
             raytracer = new Raytracer(scene, camera, screen);
@@ -89,7 +95,7 @@ namespace Template
             scene.Add(new Sphere(0.0f, 0.0f, 2f, 0.5f) { material = mirror });
             scene.Add(new Sphere(0.5f, 0.6f, 2.2f, 0.3f) { material = green });
 
-            // scene.Add(new Triangle(new Vector3(-2.0f, 0.0f, 1.0f), new Vector3(-1.5f, 0.0f, 2.0f), new Vector3(-2.0f, -1.5f, 2.0f)) { material = cyan });
+            scene.Add(new Triangle(new Vector3(-2.0f, 0.0f, 1.0f), new Vector3(-1.5f, 0.0f, 2.0f), new Vector3(-2.0f, -1.5f, 2.0f)) { material = cyan });
 
             scene.Add(new Plane(0.0f, 0.0f, -1.0f, 3.5f) { material = cyan });
             scene.Add(new Plane(0.0f, 0.0f, 1.0f, 2.0f) { material = cyan });
@@ -125,6 +131,13 @@ namespace Template
                 {
                     primD[numPrims] = plane.d;
                     primTypes[numPrims] = 1;
+                }
+                else if (p is Triangle tri)
+                {
+                    v0[numPrims] = tri.v0;
+                    v1[numPrims] = tri.v1;
+                    v2[numPrims] = tri.v2;
+                    primTypes[numPrims] = 2;
                 }
                 numPrims++;
             }

@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using OpenTK.Mathematics;
 using Template;
 
@@ -165,8 +166,8 @@ namespace Objects
     }
     public class Triangle : Primitive
     {
-        private Vector3 v0, v1, v2;
-        private Vector3 normal;
+        public Vector3 v0, v1, v2;
+        public Vector3 normal;
 
         public Triangle(Vector3 v0, Vector3 v1, Vector3 v2)
         {
@@ -178,7 +179,35 @@ namespace Objects
 
         public override Intersection? Intersect(Vector3 origin, Vector3 direction)
         {
-            // TODO : Implement ray-triangle intersection
+            Vector3 e1 = v1 - v0;
+            Vector3 e2 = v2 - v0;
+            Vector3 h = Vector3.Cross(direction, e2);
+            float a = Vector3.Dot(e1, h);
+
+            if (a > -0.0001f && a < 0.0001f)
+                return null;
+
+            float f = 1 / a;
+            Vector3 s = origin - v0;
+            float u = f * Vector3.Dot(s, h);
+
+            if (u < 0 || u > 1)
+                return null;
+
+            Vector3 q = Vector3.Cross(s, e1);
+            float v = f * Vector3.Dot(direction, q);
+
+            if (v < 0 || u + v > 1)
+                return null;
+
+            float t = f * Vector3.Dot(e2, q);
+
+            if (t > 0.0001f)
+            {
+                Vector3 hitPoint = origin + direction * t;
+                return new Intersection(this, t, hitPoint);
+            }
+
             return null;
         }
 

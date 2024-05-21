@@ -174,6 +174,9 @@ namespace Template
                     GL.Uniform1(GL.GetUniformLocation(programID, $"primRadius[{i}]"), app.primRadius[i]);
                     GL.Uniform1(GL.GetUniformLocation(programID, $"primD[{i}]"), app.primD[i]);
                     GL.Uniform1(GL.GetUniformLocation(programID, $"primTypes[{i}]"), app.primTypes[i]);
+                    GL.Uniform3(GL.GetUniformLocation(programID, $"primV0[{i}]"), app.v0[i].X, app.v0[i].Y, app.v0[i].Z);
+                    GL.Uniform3(GL.GetUniformLocation(programID, $"primV1[{i}]"), app.v1[i].X, app.v1[i].Y, app.v1[i].Z);
+                    GL.Uniform3(GL.GetUniformLocation(programID, $"primV2[{i}]"), app.v2[i].X, app.v2[i].Y, app.v2[i].Z);
                 }
 
             }
@@ -249,6 +252,9 @@ namespace Template
                     GL.Uniform1(GL.GetUniformLocation(programID, $"primRadius[{i}]"), app.primRadius[i]);
                     GL.Uniform1(GL.GetUniformLocation(programID, $"primD[{i}]"), app.primD[i]);
                     GL.Uniform1(GL.GetUniformLocation(programID, $"primTypes[{i}]"), app.primTypes[i]);
+                    GL.Uniform3(GL.GetUniformLocation(programID, $"primV0[{i}]"), app.v0[i].X, app.v0[i].Y, app.v0[i].Z);
+                    GL.Uniform3(GL.GetUniformLocation(programID, $"primV1[{i}]"), app.v1[i].X, app.v1[i].Y, app.v1[i].Z);
+                    GL.Uniform3(GL.GetUniformLocation(programID, $"primV2[{i}]"), app.v2[i].X, app.v2[i].Y, app.v2[i].Z);
                 }
                 
                 GL.BindTexture(TextureTarget.Texture2D, screenID);
