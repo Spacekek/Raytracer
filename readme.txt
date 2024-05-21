@@ -21,7 +21,7 @@ Controls: ...
 [X] Debug visualization: sphere primitives ✓, rays (primary ✓, shadow, reflected, refracted)
 
 Bonus features implemented:
-[ ] Triangle primitives: single triangles or meshes
+[X] Triangle primitives: single triangles or meshes
 [ ] Interpolated normals: only required on triangle primitives, 3 different vertex normals must be specified
 [ ] Spot lights: smooth falloff optional
 [ ] Glossy reflections: not only of light sources but of other objects
