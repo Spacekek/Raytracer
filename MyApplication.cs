@@ -1,6 +1,7 @@
 using OpenTK.Mathematics;
 using Objects;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using System.Net.Http.Headers;
 
 namespace Template
 {
@@ -269,15 +270,21 @@ namespace Template
 
         public void RotateYaw(float angle)
         {
-            Quaternion rotation = Quaternion.FromAxisAngle(up, MathHelper.DegreesToRadians(angle));
+            Vector3 worldUp = new Vector3(0, 1, 0);
+            Quaternion rotation = Quaternion.FromAxisAngle(worldUp, MathHelper.DegreesToRadians(angle));
             direction = Vector3.Transform(direction, rotation).Normalized();
+            up = Vector3.Transform(up, rotation).Normalized(); 
         }
 
         public void RotatePitch(float angle)
         {
             Vector3 right = Vector3.Cross(up, direction).Normalized();
             Quaternion rotation = Quaternion.FromAxisAngle(right, MathHelper.DegreesToRadians(angle));
-            direction = Vector3.Transform(direction, rotation).Normalized();
+            // if the camera is looking straight up or down, don't rotate around the right vector
+            Vector3 tempdirection = Vector3.Transform(direction, rotation).Normalized();
+            if (tempdirection.Y > 0.99 || tempdirection.Y < -0.99)
+                return;
+            direction = tempdirection;
             up = Vector3.Transform(up, rotation).Normalized();
         }
     }
