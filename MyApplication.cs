@@ -31,6 +31,8 @@ namespace Template
         public Vector3[] v0;
         public Vector3[] v1;
         public Vector3[] v2;
+        private float prevMouseX;
+        private float prevMouseY;
 
         public MyApplication(Surface screen)
         {
@@ -58,6 +60,8 @@ namespace Template
             scene = new Scene();
             raytracer = new Raytracer(scene, camera, screen);
             debug = false;
+            prevMouseX = 0;
+            prevMouseY = 0;
         }
 
         public void Init()
@@ -189,6 +193,19 @@ namespace Template
             // Look up/down
             camera.RotatePitch(state.IsKeyDown(Keys.Up) ? rotateSpeed : 0.0f);
             camera.RotatePitch(state.IsKeyDown(Keys.Down) ? -rotateSpeed : 0.0f);
+        }
+        public void UpdateMouse(MouseState state)
+        {
+            // update camera rotation based on mouse movement
+            if (prevMouseX != 0 && prevMouseY != 0){
+                float dx = state.X - prevMouseX;
+                float dy = state.Y - prevMouseY;
+                float rotateSpeed = 0.5f;
+                camera.RotateYaw(dx * rotateSpeed);
+                camera.RotatePitch(-dy * rotateSpeed);
+            }
+            prevMouseX = state.X;
+            prevMouseY = state.Y;
         }
     }
 

@@ -207,6 +207,8 @@ namespace Template
             var keyboard = KeyboardState;
             if (keyboard[Keys.Escape]) terminated = true;
             if (keyboard.IsAnyKeyDown) app?.UpdateKeyboard(keyboard);
+            var mouse_state = MouseState;
+            app?.UpdateMouse(mouse_state);
         }
         protected override void OnRenderFrame(FrameEventArgs e)
         {
