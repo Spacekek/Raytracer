@@ -180,6 +180,9 @@ namespace Template
                 }
 
             }
+
+            CursorState = CursorState.Grabbed;
+
             app.Init();
         }
         protected override void OnUnload()
