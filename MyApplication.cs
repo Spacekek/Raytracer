@@ -168,7 +168,7 @@ namespace Template
             if (DateTime.Now.Ticks/10000000 - prevtime.Ticks/10000000 > 0.2)
             {
                 // toggle debug view on key press
-                debug = state.IsKeyDown(Keys.Space) ? !debug : debug;
+                debug = state.IsKeyDown(Keys.Enter) ? !debug : debug;
 
                 // toggle gpu
                 gpu = state.IsKeyDown(Keys.G) ? gpu * -1 : gpu;
@@ -194,6 +194,10 @@ namespace Template
             // Look up/down
             camera.RotatePitch(state.IsKeyDown(Keys.Up) ? rotateSpeed : 0.0f);
             camera.RotatePitch(state.IsKeyDown(Keys.Down) ? -rotateSpeed : 0.0f);
+
+            // Move up/down
+            camera.position -= state.IsKeyDown(Keys.Space) ? camera.up * moveSpeed : Vector3.Zero;
+            camera.position += state.IsKeyDown(Keys.LeftShift) ? camera.up * moveSpeed : Vector3.Zero;
         }
         public void UpdateMouse(MouseState state)
         {
