@@ -29,6 +29,8 @@ uniform vec3[10] primV0;
 uniform vec3[10] primV1;
 uniform vec3[10] primV2;
 uniform int[10] primTypes;
+uniform int width;
+uniform int height;
 
 
 // shader output
@@ -313,7 +315,7 @@ void main() {
     }
 
     vec3 orig = cameraPosition;
-    vec3 dir = GetRayDirection(int(uv.x * 640.0), int(uv.y * 640.0), 640, 640);
+    vec3 dir = GetRayDirection(int(uv.x * width), int(uv.y * height), width, height);
     Intersection intersection = SceneIntersect(orig, dir, primitives, 0.0001);
     if (intersection.hit) {
         outputColor = Shade(intersection.prim, intersection.hitPoint, dir, lights, primitives, 5);
