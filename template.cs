@@ -262,7 +262,7 @@ namespace Template
         {
             // entry point
             using OpenTKApp app = new();
-            app.UpdateFrequency = 120.0;
+            app.UpdateFrequency = 30.0;
             app.Run();
         }
     }
