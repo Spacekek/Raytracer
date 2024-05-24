@@ -95,16 +95,23 @@ namespace Template
                 diffuseColor = new Vector4(1.0f, 0.8f, 0.95f, 1.0f),
                 ambientColor = new Vector4(0.07f, 0.05f, 0.05f, 1.0f),
             };
+            Material checkerboardMaterial = new Material(1.0f)
+            {
+                diffuseColor = new Vector4(1.0f, 1.0f, 1.0f, 1.0f),
+                ambientColor = new Vector4(0.1f, 0.1f, 0.1f, 1.0f),
+                useCheckerboard = true
+            };
 
             // add scene objects and lights
             scene.Add(new Sphere(0.0f, 0.0f, 2f, 0.5f) { material = mirror });
             scene.Add(new Sphere(0.5f, 0.6f, 2.2f, 0.3f) { material = green });
 
             scene.Add(new Triangle(new Vector3(-2.0f, 0.0f, 1.0f), new Vector3(-1.5f, 0.0f, 2.0f), new Vector3(-2.0f, -1.5f, 2.0f)) { material = cyan });
+            
+            scene.Add(new Plane(0.0f, -1.0f, 0.0f, 1.0f) { material = checkerboardMaterial });
 
             scene.Add(new Plane(0.0f, 0.0f, -1.0f, 3.5f) { material = cyan });
             scene.Add(new Plane(0.0f, 0.0f, 1.0f, 2.0f) { material = cyan });
-            scene.Add(new Plane(0.0f, -1.0f, 0.0f, 1.0f) { material = orange });
             scene.Add(new Plane(0.0f, 1.0f, 0.0f, 4.0f) { material = orange });
             scene.Add(new Plane(1.0f, 0.0f, 0.0f, 4.0f) { material = green });
             scene.Add(new Plane(-1.0f, 0.0f, 0.0f, 4.0f) { material = pink });

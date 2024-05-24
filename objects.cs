@@ -11,6 +11,7 @@ namespace Objects
         public Vector4 ambientColor;
         public float diffuse;
         public float specular;
+        public bool useCheckerboard;
 
         public Material(float diffuse)
         {
@@ -19,6 +20,7 @@ namespace Objects
             glossyColor = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
             diffuseColor = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
             ambientColor = diffuseColor * 0.1f * diffuse;
+            useCheckerboard = false;
         }
     }
     public abstract class Primitive
@@ -56,6 +58,12 @@ namespace Objects
                 }
 
                 Vector4 diffuseColor = material.diffuseColor * diffuse;
+
+                // Use checkerboard color if the material's flag is true
+                if (material.useCheckerboard && this is Plane plane)
+                {
+                    diffuseColor = plane.GetCheckerboardColor(hitPoint) * diffuse;
+                }
 
                 Vector3 reflection = shadowRay - 2 * Vector3.Dot(shadowRay, normal) * normal;
                 float n = 250;
@@ -154,6 +162,18 @@ namespace Objects
         public override Vector3 GetNormal(Vector3 hitPoint)
         {
             return normal;
+        }
+
+        public Vector4 GetCheckerboardColor(Vector3 hitPoint)
+        {
+            float scale = 1.0f; // Size of the checkerboard squares
+            int x = (int)Math.Floor(hitPoint.X / scale);
+            int z = (int)Math.Floor(hitPoint.Z / scale);
+
+            if ((x + z) % 2 == 0)
+                return new Vector4(1.0f, 1.0f, 1.0f, 1.0f); // White color
+            else
+                return new Vector4(0.0f, 0.0f, 0.0f, 1.0f); // Black color
         }
 
         public override void DrawDebug(Surface screen, float scale, float x_offset, float y_offset)
