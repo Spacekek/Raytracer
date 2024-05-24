@@ -254,6 +254,7 @@ namespace Template
                 GL.Uniform3(GL.GetUniformLocation(programID, $"primV0[{i}]"), app.v0[i].X, app.v0[i].Y, app.v0[i].Z);
                 GL.Uniform3(GL.GetUniformLocation(programID, $"primV1[{i}]"), app.v1[i].X, app.v1[i].Y, app.v1[i].Z);
                 GL.Uniform3(GL.GetUniformLocation(programID, $"primV2[{i}]"), app.v2[i].X, app.v2[i].Y, app.v2[i].Z);
+                GL.Uniform1(GL.GetUniformLocation(programID, $"primCheckerboard[{i}]"), app.primCheckerboard[i] ? 1 : 0);
             }
             GL.Uniform1(GL.GetUniformLocation(programID, "width"), ClientSize.X);
             GL.Uniform1(GL.GetUniformLocation(programID, "height"), ClientSize.Y);

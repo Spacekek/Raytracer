@@ -1,6 +1,8 @@
 using System.Security.Cryptography.X509Certificates;
 using OpenTK.Mathematics;
 using Template;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace Objects
 {
@@ -59,10 +61,16 @@ namespace Objects
 
                 Vector4 diffuseColor = material.diffuseColor * diffuse;
 
-                // Use checkerboard color if the material's flag is true
-                if (material.useCheckerboard && this is Plane plane)
+                if (this is Plane plane)
                 {
-                    diffuseColor = plane.GetCheckerboardColor(hitPoint) * diffuse;
+                    if (plane.texture != null)
+                    {
+                        diffuseColor = plane.GetTextureColor(hitPoint) * diffuse;
+                    }
+                    else if (material.useCheckerboard)
+                    {
+                        diffuseColor = plane.GetCheckerboardColor(hitPoint) * diffuse;
+                    }
                 }
 
                 Vector3 reflection = shadowRay - 2 * Vector3.Dot(shadowRay, normal) * normal;
@@ -135,6 +143,7 @@ namespace Objects
     {
         private Vector3 normal;
         public float d;
+        public Texture texture;
 
         public Plane(float nx, float ny, float nz, float d)
         {
@@ -166,14 +175,41 @@ namespace Objects
 
         public Vector4 GetCheckerboardColor(Vector3 hitPoint)
         {
-            float scale = 1.0f; // Size of the checkerboard squares
-            int x = (int)Math.Floor(hitPoint.X / scale);
-            int z = (int)Math.Floor(hitPoint.Z / scale);
+            if (material.useCheckerboard)
+            {
+                float scale = 7.5f;
+                float sines = (float)(Math.Sin(hitPoint.X * scale) * Math.Sin(hitPoint.Y * scale) * Math.Sin(hitPoint.Z * scale));
+                if (sines < 0.0f)
+                {
+                    return new Vector4(0.0f, 0.0f, 0.0f, 1.0f); // Black color
+                }
+            }
+            return new Vector4(1.0f, 1.0f, 1.0f, 1.0f); // White color
+        }
 
-            if ((x + z) % 2 == 0)
-                return new Vector4(1.0f, 1.0f, 1.0f, 1.0f); // White color
-            else
-                return new Vector4(0.0f, 0.0f, 0.0f, 1.0f); // Black color
+        public Vector2 GetTextureCoordinates(Vector3 hitPoint)
+        {
+            // Assuming the plane is aligned with the XY plane and the texture is mapped to it
+            float u = (hitPoint.X / 5 - 0.5f) % 1;
+            float v = (hitPoint.Y / 5 - 0.2f) % 1;
+
+            // Mirror the texture
+            u = -u;
+
+            if (u < 0) u += 1;
+            if (v < 0) v += 1;
+
+
+            return new Vector2(u, v);
+        }
+
+        public Vector4 GetTextureColor(Vector3 hitPoint)
+        {
+            if (texture == null)
+                return material.diffuseColor;
+
+            Vector2 texCoords = GetTextureCoordinates(hitPoint);
+            return texture.GetColor(texCoords.X, texCoords.Y);
         }
 
         public override void DrawDebug(Surface screen, float scale, float x_offset, float y_offset)
@@ -278,6 +314,42 @@ namespace Objects
             this.prim = prim;
             this.distance = distance;
             this.hitPoint = hitPoint;
+        }
+    }
+
+    public class Texture
+    {
+        public int Width { get; private set; }
+        public int Height { get; private set; }
+        private Vector4[,]? pixels;
+
+        public Texture(string filePath)
+        {
+            LoadTexture(filePath);
+        }
+
+        private void LoadTexture(string filePath)
+        {
+            Bitmap bitmap = new Bitmap(filePath);
+            Width = bitmap.Width;
+            Height = bitmap.Height;
+            pixels = new Vector4[Width, Height];
+
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    System.Drawing.Color color = bitmap.GetPixel(x, y);
+                    pixels[x, y] = new Vector4(color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f);
+                }
+            }
+        }
+
+        public Vector4 GetColor(float u, float v)
+        {
+            int x = (int)(u * (Width - 1));
+            int y = (int)(v * (Height - 1));
+            return pixels[x, y];
         }
     }
 }

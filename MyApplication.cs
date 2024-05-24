@@ -32,6 +32,7 @@ namespace Template
         public Vector3[] v0;
         public Vector3[] v1;
         public Vector3[] v2;
+        public bool[] primCheckerboard;
         private float prevMouseX;
         private float prevMouseY;
 
@@ -54,6 +55,7 @@ namespace Template
             primRadius = new float[10];
             primD = new float[10];
             primTypes = new int[10];
+            primCheckerboard = new bool[10];
             v0 = new Vector3[10];
             v1 = new Vector3[10];
             v2 = new Vector3[10];
@@ -110,8 +112,16 @@ namespace Template
             
             scene.Add(new Plane(0.0f, -1.0f, 0.0f, 1.0f) { material = checkerboardMaterial });
 
+            // Load the texture
+            Texture wallTexture = new Texture("wall_texture.jpg");
+
+            // Apply the texture to the wall plane (e.g., the plane facing forward)
+            Plane frontWallPlane = new Plane(0.0f, 0.0f, 1.0f, 2.0f) { material = new Material(1.0f) };
+            frontWallPlane.texture = wallTexture;
+
+            scene.Add(frontWallPlane);
+
             scene.Add(new Plane(0.0f, 0.0f, -1.0f, 3.5f) { material = cyan });
-            scene.Add(new Plane(0.0f, 0.0f, 1.0f, 2.0f) { material = cyan });
             scene.Add(new Plane(0.0f, 1.0f, 0.0f, 4.0f) { material = orange });
             scene.Add(new Plane(1.0f, 0.0f, 0.0f, 4.0f) { material = green });
             scene.Add(new Plane(-1.0f, 0.0f, 0.0f, 4.0f) { material = pink });
@@ -134,6 +144,7 @@ namespace Template
                 primGlossyColors[numPrims] = p.material.glossyColor;
                 primAmbientColors[numPrims] = p.material.ambientColor;
                 primSpecular[numPrims] = p.material.specular;
+                primCheckerboard[numPrims] = p.material.useCheckerboard;
                 if (p is Sphere sphere)
                 {
                     primRadius[numPrims] = sphere.radius;
@@ -185,6 +196,11 @@ namespace Template
             float dt = (float)(DateTime.Now.Ticks - time.Ticks)/5000000;
             // Move forward/backward
             float moveSpeed = dt;
+
+            // When holding ctrl, move faster
+            if (state.IsKeyDown(Keys.LeftControl))
+                moveSpeed *= 2;
+
             camera.position += state.IsKeyDown(Keys.W) ? camera.direction * moveSpeed : Vector3.Zero;
             camera.position -= state.IsKeyDown(Keys.S) ? camera.direction * moveSpeed : Vector3.Zero;
 

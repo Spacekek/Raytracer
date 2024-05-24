@@ -28,6 +28,7 @@ uniform float[10] primD;
 uniform vec3[10] primV0;
 uniform vec3[10] primV1;
 uniform vec3[10] primV2;
+uniform int[10] primCheckerboard;
 uniform int[10] primTypes;
 uniform int width;
 uniform int height;
@@ -42,6 +43,7 @@ struct Material {
     vec4 glossyColor;
     vec4 ambientColor;
     float specular;
+    int checkerboard;
 };
 
 struct Primitive {
@@ -217,7 +219,7 @@ vec4 CalculateLighting(vec3 hitPoint, vec3 viewDir, vec3 normal, Material materi
     vec3 shadowRay = normalize(light.position - hitPoint);
     float dist = length(light.position - hitPoint);
     float diffuse = max(dot(normal, shadowRay), 0.0);
-    float glossy = 1.0;
+    float glossy = 1.0; 
 
     if (IsInShadow(hitPoint, shadowRay, primitives, epsilon, dist)) {
         diffuse = 0.0;
@@ -225,6 +227,14 @@ vec4 CalculateLighting(vec3 hitPoint, vec3 viewDir, vec3 normal, Material materi
     }
 
     vec4 diffuseColor = material.diffuseColor * diffuse;
+
+    if (material.checkerboard == 1) {
+        float scale = 7.5;
+        float sines = sin(hitPoint.x * scale) * sin(hitPoint.y * scale) * sin(hitPoint.z * scale);
+        if (sines < 0.0) {
+            diffuseColor = vec4(0.0);
+        }
+    }
 
     vec3 reflection = shadowRay - 2.0 * dot(shadowRay, normal) * normal;
     float n = 250.0;
@@ -409,13 +419,13 @@ void main() {
     Primitive[10] primitives;
     for (int i = 0; i < NUM_PRIMS; i++) {
         if (primTypes[i] == 0) {
-            primitives[i] = Primitive(0, primPositions[i], vec3(0.0), Material(primDiffuseColors[i], primGlossyColors[i], primAmbientColors[i], primSpecular[i]), primRadius[i], 0.0, vec3(0.0), vec3(0.0), vec3(0.0));
+            primitives[i] = Primitive(0, primPositions[i], vec3(0.0), Material(primDiffuseColors[i], primGlossyColors[i], primAmbientColors[i], primSpecular[i], primCheckerboard[i]), primRadius[i], 0.0, vec3(0.0), vec3(0.0), vec3(0.0));
         }
         if (primTypes[i] == 1) {
-            primitives[i] = Primitive(1, vec3(0.0), primNormals[i], Material(primDiffuseColors[i], primGlossyColors[i], primAmbientColors[i], primSpecular[i]), 0.0, primD[i], vec3(0.0), vec3(0.0), vec3(0.0));
+            primitives[i] = Primitive(1, vec3(0.0), primNormals[i], Material(primDiffuseColors[i], primGlossyColors[i], primAmbientColors[i], primSpecular[i], primCheckerboard[i]), 0.0, primD[i], vec3(0.0), vec3(0.0), vec3(0.0));
         }
         if (primTypes[i] == 2) {
-            primitives[i] = Primitive(2, vec3(0.0), primNormals[i], Material(primDiffuseColors[i], primGlossyColors[i], primAmbientColors[i], primSpecular[i]), 0.0, 0.0, primV0[i], primV1[i], primV2[i]);
+            primitives[i] = Primitive(2, vec3(0.0), primNormals[i], Material(primDiffuseColors[i], primGlossyColors[i], primAmbientColors[i], primSpecular[i], primCheckerboard[i]), 0.0, 0.0, primV0[i], primV1[i], primV2[i]);
         }
     }
 
