@@ -205,6 +205,15 @@ namespace Template
             // Move up/down
             camera.position -= state.IsKeyDown(Keys.Space) ? camera.up * moveSpeed : Vector3.Zero;
             camera.position += state.IsKeyDown(Keys.LeftShift) ? camera.up * moveSpeed : Vector3.Zero;
+
+            // q and e for changing fov
+            // only if the fov is between 1 and 179
+            if (camera.fov > 1 && camera.fov < 179)
+            {
+                camera.fov += state.IsKeyDown(Keys.Q) ? -dt : 0.0f;
+                camera.fov += state.IsKeyDown(Keys.E) ? dt : 0.0f;
+                camera.CalculateCorners((float)screen.width / screen.height);
+            }
         }
         public void UpdateMouse(MouseState state)
         {
@@ -239,7 +248,7 @@ namespace Template
             CalculateCorners(aspect);
         }
 
-        private void CalculateCorners(float aspect)
+        public void CalculateCorners(float aspect)
         {
             float d = 1 / (float)Math.Tan(fov * Math.PI / 180 / 2);
             Vector3 right = Vector3.Cross(up, direction).Normalized();

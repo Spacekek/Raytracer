@@ -25,7 +25,7 @@ Bonus features implemented:
 [ ] Interpolated normals: only required on triangle primitives, 3 different vertex normals must be specified
 [ ] Spot lights: smooth falloff optional
 [ ] Glossy reflections: not only of light sources but of other objects
-[ ] Anti-aliasing
+[X] Anti-aliasing
 [X] Parallelized: using parallel-for, async tasks, threads, or [fill in other method]
 [ ] Textures: on all implemented primitives
 [ ] Bump or normal mapping: on all implemented primitives
@@ -38,3 +38,5 @@ Note: [provide one measurement of speed/time with and without the acceleration s
 
 Notes:
 GPU implementation uses a fragment shader.
+For the anti-aliasing (only on cpu version), we use an existing FXAA implementation, applied in the fragment shader to not slow down the raytracer too much.
+The controls are: w, a, s, d for movement, arrow keys or mouse for rotation, q, e for field of view, space and shift for up and down. Enter for debug mode (only on cpu version).
