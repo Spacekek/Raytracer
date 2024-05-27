@@ -2,6 +2,7 @@ using OpenTK.Mathematics;
 using Objects;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
 
 namespace Template
 {
@@ -112,14 +113,23 @@ namespace Template
             
             scene.Add(new Plane(0.0f, -1.0f, 0.0f, 1.0f) { material = checkerboardMaterial });
 
-            // Load the texture
-            Texture wallTexture = new Texture("wall_texture.jpg");
+            // Check if the application is run on Windows
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // Load the texture
+                Texture wallTexture = new Texture("wall_texture.jpg");
 
-            // Apply the texture to the wall plane (e.g., the plane facing forward)
-            Plane frontWallPlane = new Plane(0.0f, 0.0f, 1.0f, 2.0f) { material = new Material(1.0f) };
-            frontWallPlane.texture = wallTexture;
+                // Apply the texture to the wall plane (e.g., the plane facing forward)
+                Plane frontWallPlane = new Plane(0.0f, 0.0f, 1.0f, 2.0f) { material = new Material(1.0f) };
+                frontWallPlane.texture = wallTexture;
 
-            scene.Add(frontWallPlane);
+                scene.Add(frontWallPlane);
+            }
+            else
+            {
+                // If the application is not run on Windows, use a simple color for the wall plane
+                scene.Add(new Plane(0.0f, 0.0f, 1.0f, 2.0f) { material = cyan });
+            }
 
             scene.Add(new Plane(0.0f, 0.0f, -1.0f, 3.5f) { material = cyan });
             scene.Add(new Plane(0.0f, 1.0f, 0.0f, 4.0f) { material = orange });
