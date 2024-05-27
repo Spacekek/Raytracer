@@ -16,8 +16,8 @@ Controls: ...
 [X] Lights: at least 2 point lights, additive contribution, shadows without "acne"
 [X] Diffuse shading: (N.L), distance attenuation
 [X] Phong shading: (R.V) or (N.H), exponent
-[ ] Diffuse color texture: only required on the plane primitive, image or procedural, (u,v) texture coordinates
-[1/2X] Mirror reflection: recursive
+[X] Diffuse color texture: only required on the plane primitive, image or procedural, (u,v) texture coordinates
+[X] Mirror reflection: recursive
 [X] Debug visualization: sphere primitives ✓, rays (primary ✓, shadow, reflected, refracted)
 
 Bonus features implemented:
@@ -38,5 +38,10 @@ Note: [provide one measurement of speed/time with and without the acceleration s
 
 Notes:
 GPU implementation uses a fragment shader.
-For the anti-aliasing (only on cpu version), we use an existing FXAA implementation, applied in the fragment shader to not slow down the raytracer too much.
-The controls are: w, a, s, d for movement, arrow keys or mouse for rotation, q, e for field of view, space and shift for up and down. Enter for debug mode (only on cpu version).
+For the anti-aliasing (only on cpu version and not for OSX), we use an existing FXAA implementation, applied in the fragment shader to not slow down the raytracer too much.
+The controls are: w, a, s, d for movement, arrow keys or mouse for rotation, q, e for field of view, space and shift for up and down,. ctrl for moving faster.
+Enter for debug mode (only on cpu version).
+g for toggling between cpu and gpu version.
+Textures from images only work for windows.
+Parallelized using parallel-for.
+Mirror reflection is using a loop instead of recursion on the gpu version (glsl does not support recursion).
