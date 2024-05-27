@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL;
+﻿using System.Runtime.InteropServices;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
@@ -104,7 +105,11 @@ namespace Template
                     throw new Exception($"Error occurred whilst compiling vertex shader ({vertexShader}):\n{log}");
                 }
                 // Fragment Shader
-                shaderSource = File.ReadAllText("shaders/screen_fs.glsl");
+                // FXAA implementation does not work for MacOS
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                    shaderSource = File.ReadAllText("shaders/screen_fs.glsl");
+                else
+                    shaderSource = File.ReadAllText("shaders/screen_fxaa_fs.glsl");
                 int fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
                 GL.ShaderSource(fragmentShader, shaderSource);
                 GL.CompileShader(fragmentShader);
