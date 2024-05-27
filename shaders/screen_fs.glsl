@@ -121,6 +121,7 @@ Intersection SphereIntersect(vec3 orig, vec3 dir, Primitive prim) {
 }
 
 
+// Function to calculate the intersection between a plane and a ray
 Intersection PlaneIntersect(vec3 origin, vec3 direction, Primitive prim) {
     float denom = dot(prim.normal, direction);
     if (abs(denom) <= 0.0001)
@@ -136,22 +137,27 @@ Intersection PlaneIntersect(vec3 origin, vec3 direction, Primitive prim) {
     return Intersection(true, prim, hitPoint, t);
 }
 
+// Function to calculate the intersection between a triangle and a ray
 Intersection TriangleIntersect(vec3 orig, vec3 dir, Primitive prim) {
+    // Möller-Trumbore intersection algorithm
     vec3 e1 = prim.v1 - prim.v0;
     vec3 e2 = prim.v2 - prim.v0;
     vec3 h = cross(dir, e2);
     float a = dot(e1, h);
+    // if a is near zero, the ray is parallel to the triangle
     if (a > -0.0001f && a < 0.0001f)
         return Intersection(false, prim, vec3(0.0), 0.0);
 
     float f = 1.0 / a;
     vec3 s = orig - prim.v0;
     float u = f * dot(s, h);
+    // if u is less than 0 or greater than 1, the intersection is outside the triangle
     if (u < 0.0 || u > 1.0)
         return Intersection(false, prim, vec3(0.0), 0.0);
 
     vec3 q = cross(s, e1);
     float v = f * dot(dir, q);
+    // if v is less than 0 or u + v is greater than 1, the intersection is outside the triangle
     if (v < 0.0 || u + v > 1.0)
         return Intersection(false, prim, vec3(0.0), 0.0);
 
@@ -164,8 +170,9 @@ Intersection TriangleIntersect(vec3 orig, vec3 dir, Primitive prim) {
     return Intersection(false, prim, vec3(0.0), 0.0);
 }
 
-
+// Function to check if a point is in shadow
 bool IsInShadow(vec3 origin, vec3 direction, Primitive[10] primitives, float epsilon, float dist) {
+    // loop through all the primitives in the scene, if the direction intersects with any of them, return true
     for (int i = 0; i < NUM_PRIMS; i++) {
         Primitive prim = primitives[i];
         if (prim.type == 0) { // sphere
@@ -190,10 +197,12 @@ bool IsInShadow(vec3 origin, vec3 direction, Primitive[10] primitives, float eps
     return false;
 }
 
+// Function to calculate the intersection between a ray and the scene
 Intersection SceneIntersect(vec3 orig, vec3 dir, Primitive[10] primitives, float epsilon) {
     float closest = 1000000.0;
     Primitive closestPrim;
     Intersection intersection = Intersection(false, closestPrim, vec3(0.0), 0);
+    // loop through all the primitives in the scene
     for (int i = 0; i < NUM_PRIMS; i++) {
         Primitive prim = primitives[i];
         Intersection intersect;
@@ -206,6 +215,7 @@ Intersection SceneIntersect(vec3 orig, vec3 dir, Primitive[10] primitives, float
         if (prim.type == 2) { // triangle
             intersect = TriangleIntersect(orig, dir, prim);
         }
+        // if the intersection is closer than the previous closest intersection, update the closest intersection
         if (intersect.hit && length(intersect.hitPoint - orig) < closest && length(intersect.hitPoint - orig) > epsilon) {
             closest = length(intersect.hitPoint - orig);
             intersection = intersect;
@@ -214,20 +224,21 @@ Intersection SceneIntersect(vec3 orig, vec3 dir, Primitive[10] primitives, float
     return intersection;
 }
 
+// Function to calculate the lighting at a given point
 vec4 CalculateLighting(vec3 hitPoint, vec3 viewDir, vec3 normal, Material material, Primitive[10] primitives, Light light, float epsilon) {
     vec4 finalColor = vec4(0.0);
     vec3 shadowRay = normalize(light.position - hitPoint);
     float dist = length(light.position - hitPoint);
     float diffuse = max(dot(normal, shadowRay), 0.0);
     float glossy = 1.0; 
-
+    // check if the point is in shadow and if so, set the diffuse and glossy values to 0
     if (IsInShadow(hitPoint, shadowRay, primitives, epsilon, dist)) {
         diffuse = 0.0;
         glossy = 0.0;
     }
 
     vec4 diffuseColor = material.diffuseColor * diffuse;
-
+    // checkerboard pattern
     if (material.checkerboard == 1) {
         float scale = 7.5;
         float sines = sin(hitPoint.x * scale) * sin(hitPoint.y * scale) * sin(hitPoint.z * scale);
@@ -235,40 +246,45 @@ vec4 CalculateLighting(vec3 hitPoint, vec3 viewDir, vec3 normal, Material materi
             diffuseColor = vec4(0.0);
         }
     }
-
+    // calculate the reflection direction
     vec3 reflection = shadowRay - 2.0 * dot(shadowRay, normal) * normal;
     float n = 250.0;
+    // calculate the glossy color
     vec4 glossyColor = pow(max(dot(reflection, viewDir), 0.0), n) * material.glossyColor * glossy;
-
+    // return the final color using light attenuation
     return light.color * 1.0 / (dist * dist) * (diffuseColor + glossyColor) + material.ambientColor;
 }
 
-
+// Function to calculate the specular color at a given point
 vec4 SpecularColor(float specular, int maxDepth, vec3 viewDir, vec3 normal, vec3 hitPoint, Primitive[10] primitives, Light light, float epsilon)
 {
     vec4 finalColor = vec4(0.0);
     float dist = length(light.position - hitPoint);
+    // loop until we reach the maximum depth or the specular value is 0
     while (specular != 0.0 && maxDepth > 0) {
+        // calculate the reflection direction
         vec3 specularDir = normalize(viewDir - 2.0 * dot(viewDir, normal) * normal);
         Intersection intersection = SceneIntersect(hitPoint, specularDir, primitives, epsilon);
         if (!intersection.hit) { break; }
         Primitive prim = intersection.prim;
-        if (prim.type == 0){
+        if (prim.type == 0){ // sphere
             normal = normalize(intersection.hitPoint - prim.position);
         }
-        if (prim.type == 1){
+        if (prim.type == 1){ // plane
             normal = prim.normal;
         }
-        if (prim.type == 2){
+        if (prim.type == 2){ // triangle
             normal = prim.normal;
         }
+        // calculate the lighting at the intersection point
         finalColor += CalculateLighting(intersection.hitPoint, specularDir, normal, prim.material, primitives, light, epsilon) * specular;
+        // update the variables for the next iteration
         specular = prim.material.specular;
         hitPoint = intersection.hitPoint;
         viewDir = specularDir;
         maxDepth--;
     }
-
+    // apply light attenuation and return the final color
     return finalColor * 1.0 / (dist * dist);
 }
 
@@ -287,6 +303,7 @@ vec4 Shade(Primitive prim, vec3 hitPoint, vec3 viewDir, Light[10] lights, Primit
         normal = prim.normal;
     }
     vec4 finalColor = vec4(0.0);
+    // loop through all the lights in the scene and calculate the lighting at the intersection point
     for (int i = 0; i < NUM_LIGHTS; i++) {
         finalColor += CalculateLighting(hitPoint, viewDir, normal, material, primitives, lights[i], epsilon);
         finalColor += SpecularColor(material.specular, maxDepth, viewDir, normal, hitPoint, primitives, lights[i], epsilon);
@@ -295,17 +312,20 @@ vec4 Shade(Primitive prim, vec3 hitPoint, vec3 viewDir, Light[10] lights, Primit
     return finalColor;
 }
 
+// Function to calculate the position of a plane
 vec3 PlanePos(vec3 normal, float d) {
     vec3 position = vec3(d/ normal.x, d / normal.y, d / normal.z);
     return position;
 }
 
 void main() {
+    // if we are running on the CPU, just sample the texture
     if (gpu < 0) {
         outputColor = texture(pixels, uv);
         return;
     }
 
+    // create lights and primitives using uniform data
     Light[10] lights;
     for (int i = 0; i < NUM_LIGHTS; i++) {
         lights[i] = Light(lightPositions[i], lightColors[i]);
@@ -313,13 +333,13 @@ void main() {
 
     Primitive[10] primitives;
     for (int i = 0; i < NUM_PRIMS; i++) {
-        if (primTypes[i] == 0) {
+        if (primTypes[i] == 0) { // sphere
             primitives[i] = Primitive(0, primPositions[i], vec3(0.0), Material(primDiffuseColors[i], primGlossyColors[i], primAmbientColors[i], primSpecular[i], primCheckerboard[i]), primRadius[i], 0.0, vec3(0.0), vec3(0.0), vec3(0.0));
         }
-        if (primTypes[i] == 1) {
+        if (primTypes[i] == 1) { // plane
             primitives[i] = Primitive(1, vec3(0.0), primNormals[i], Material(primDiffuseColors[i], primGlossyColors[i], primAmbientColors[i], primSpecular[i], primCheckerboard[i]), 0.0, primD[i], vec3(0.0), vec3(0.0), vec3(0.0));
         }
-        if (primTypes[i] == 2) {
+        if (primTypes[i] == 2) { // triangle
             primitives[i] = Primitive(2, vec3(0.0), primNormals[i], Material(primDiffuseColors[i], primGlossyColors[i], primAmbientColors[i], primSpecular[i], primCheckerboard[i]), 0.0, 0.0, primV0[i], primV1[i], primV2[i]);
         }
     }
