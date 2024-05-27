@@ -40,3 +40,4 @@ Notes:
 GPU implementation uses a fragment shader.
 For the anti-aliasing (only on cpu version), we use an existing FXAA implementation, applied in the fragment shader to not slow down the raytracer too much.
 The controls are: w, a, s, d for movement, arrow keys or mouse for rotation, q, e for field of view, space and shift for up and down. Enter for debug mode (only on cpu version).
+We wrote our code in visual studio code.
