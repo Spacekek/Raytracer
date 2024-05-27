@@ -37,6 +37,8 @@ Note: [provide one measurement of speed/time with and without the acceleration s
 [X] GPU implementation: using a fragment shader, CUDA, OptiX, RTX, DXR, or [fill in other method]
 
 Notes:
+Running the program is done with "dotnet run" instead of using visual studio. (this makes the paths different)
+
 GPU implementation uses a fragment shader.
 For the anti-aliasing (only on cpu version and not for OSX), we use an existing FXAA implementation, applied in the fragment shader to not slow down the raytracer too much.
 The controls are: w, a, s, d for movement, arrow keys or mouse for rotation, q, e for field of view, space and shift for up and down,. ctrl for moving faster.
